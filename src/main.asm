@@ -2,13 +2,13 @@ section .data
     text1 DB  0x0A, '|------Calculator-App-------|', 0x0A, 0x00 
     lent1 EQU $ - text1
 
-    text2 DB  0x0A, 'Enter your 1st number: ', 0x0A, 0x00 
+    text2 DB  'Enter your 1st number: ', 0x0A, 0x00 
     lent2 EQU $ - text2
 
-    text3 DB  0x0A, 'Enter your 2nd number: ', 0x0A, 0x00 
+    text3 DB  'Enter your 2nd number: ', 0x0A, 0x00 
     lent3 EQU $ - text3
 
-    text4 DB  0x0A, '1. Add',                  0x0A, 0x00 
+    text4 DB  '1. Add',                  0x0A, 0x00 
     lent4 EQU $ - text4
 
 
@@ -37,7 +37,7 @@ _start:
     MOV edx,lent2
     INT 80h
 
-    CALL user_input
+    CALL user_input_1
 
     ; Print message 3
     MOV eax,4
@@ -46,6 +46,8 @@ _start:
     MOV edx,lent3
     INT 80h
 
+    CALL user_input_2
+
     ; Print message 4
     MOV eax,4
     MOV ebx,1
@@ -53,14 +55,33 @@ _start:
     MOV edx,lent4
     INT 80h
 
+    CALL user_input_3
+
     JMP exit
 
-user_input:
+user_input_1:
     MOV eax,3 ; sys_read
     MOV ebx,0 ; file descriptor 0 => stdin
     MOV ecx,num1
     MOV edx,2
     INT 80h
+    RET
+
+user_input_2:
+    MOV eax,3
+    MOV ebx,0
+    MOV ecx,num2
+    MOV edx,2
+    INT 80h
+    RET
+
+user_input_3:
+    MOV eax,3
+    MOV ebx,0
+    MOV ecx,opp
+    MOV edx,2
+    INT 80h
+    RET
 
 exit:
     ; Exit the program
