@@ -56,10 +56,44 @@ _start:
     INT 80h
 
     CALL user_input_3
+    CALL ascii_to_int
 
     JMP exit
 
+; ; My try 1
+; ascii_to_int:
+;     MOV al,[num1]
+;     MOV bl,[al]
+;     ADD bl,0x01
+;     MOV cl,[bl]
+;     MUL cl,0xA
+;     ADD al,cl
+;     RET
+
+; GPT code
+ascii_to_int:
+    XOR eax,eax        ; clear result
+    XOR ecx,ecx
+    XOR edx,edx
+
+    ; get first digit
+    MOV al,[num1]       ; e.g. '4' = 0x3
+    SUB al,'0'          ; 0x34 - 0x30 = 0x04
+    MOVZX eax,al        ; clear upper bits
+    MOV ebx,10
+    MUL ebx              ; EAX = EAX * 10
+
+    ; get second digit
+    MOV cl,[num1 + 0x01] ; '2'
+    SUB cl,'0'           ; CL = 2
+    ADD eax,ecx          ; EAX = 4*10 + 2 = 42
+
+    RET
+
+
+
 user_input_1:
+    ; TODO: add a check to make it no more than 2 bytes (i.e., 2 characters)
     MOV eax,3 ; sys_read
     MOV ebx,0 ; file descriptor 0 => stdin
     MOV ecx,num1
