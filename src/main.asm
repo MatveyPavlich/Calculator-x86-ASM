@@ -1,5 +1,5 @@
 section .data
-    text1 DB  0x0A, '|------Calculator-App-------', 0x0A, 0x00 
+    text1 DB  0x0A, '|------Calculator-App-------|', 0x0A, 0x00 
     lent1 EQU $ - text1
 
     text2 DB  0x0A, 'Enter your 1st number: ', 0x0A, 0x00 
@@ -37,6 +37,8 @@ _start:
     MOV edx,lent2
     INT 80h
 
+    CALL user_input
+
     ; Print message 3
     MOV eax,4
     MOV ebx,1
@@ -51,6 +53,16 @@ _start:
     MOV edx,lent4
     INT 80h
 
+    JMP exit
+
+user_input:
+    MOV eax,3 ; sys_read
+    MOV ebx,0 ; file descriptor 0 => stdin
+    MOV ecx,num1
+    MOV edx,2
+    INT 80h
+
+exit:
     ; Exit the program
     MOV eax,1
     MOV ebx,0
