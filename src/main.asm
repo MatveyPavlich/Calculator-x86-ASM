@@ -40,6 +40,7 @@ _start:
     INT 80h
 
     CALL user_input_1
+    CALL ascii_to_int
 
     ; Print message 3
     MOV eax,4
@@ -49,6 +50,7 @@ _start:
     INT 80h
 
     CALL user_input_2
+    CALL ascii_to_int
 
     ; Print message 4
     MOV eax,4
@@ -89,10 +91,14 @@ ascii_to_int:
 
     ; get second digit
     MOV cl,[num1 + 0x01] ; '2'
+    CMP cl, 0x0A
+    JE .newline_character
     SUB cl,'0'           ; CL = 2
     ADD eax,ecx          ; EAX = 4*10 + 2 = 42
-
     RET
+
+.newline_character:
+    NOP ; user typed a single character
 
 
 
