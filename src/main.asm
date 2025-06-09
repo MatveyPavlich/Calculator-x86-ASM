@@ -1,3 +1,5 @@
+; Calculator is working for 2-digit numbers max!
+
 section .data
     text1 DB  0x0A, '|------Calculator-App-------|', 0x0A, 0x00 
     lent1 EQU $ - text1
@@ -13,8 +15,8 @@ section .data
 
 
 section .bss
-    num1 RESB 2
-    num2 RESB 2
+    num1 RESB 3
+    num2 RESB 3
     opp  RESB 2
     res  RESB 2
 
@@ -63,14 +65,16 @@ _start:
 ; ; My try 1
 ; ascii_to_int:
 ;     MOV al,[num1]
-;     MOV bl,[al]
-;     ADD bl,0x01
-;     MOV cl,[bl]
-;     MUL cl,0xA
-;     ADD al,cl
+;     SUB al, '0'
+;     MOV cl, al
+;     MOV bl,[num1 + 1]
+;     SUB bl, '0'
+;     MOV al, 0xA
+;     MUL cl,
+;     ADD bl,cl
 ;     RET
 
-; GPT code
+; GPT suggested
 ascii_to_int:
     XOR eax,eax        ; clear result
     XOR ecx,ecx
@@ -97,7 +101,7 @@ user_input_1:
     MOV eax,3 ; sys_read
     MOV ebx,0 ; file descriptor 0 => stdin
     MOV ecx,num1
-    MOV edx,2
+    MOV edx,3
     INT 80h
     RET
 
@@ -105,7 +109,7 @@ user_input_2:
     MOV eax,3
     MOV ebx,0
     MOV ecx,num2
-    MOV edx,2
+    MOV edx,3
     INT 80h
     RET
 
