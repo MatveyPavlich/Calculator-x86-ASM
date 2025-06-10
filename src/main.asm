@@ -13,10 +13,13 @@ section .data
     text4 DB  '1. Add',                  0x0A, 0x00 
     lent4 EQU $ - text4
 
+    error_text DB '2 digits max!', 0x00
+    error_text_length EQU $ - error_text
+
 
 section .bss
-    num1 RESB 3
-    num2 RESB 3
+    num1 RESB 10
+    num2 RESB 10
     opp  RESB 2
     res  RESB 2
 
@@ -64,6 +67,14 @@ _start:
 
     JMP exit
 
+
+error_print:
+    MOV eax,4
+    MOV ebx,1
+    MOV ecx,error_text
+    MOV edx,error_text_length
+    JMP exit
+
 ; ; My try 1
 ; ascii_to_int:
 ;     MOV al,[num1]
@@ -109,6 +120,9 @@ user_input_1:
     MOV ecx,num1
     MOV edx,3
     INT 80h
+
+    CMP eax,3
+    JG error_print
     RET
 
 user_input_2:
