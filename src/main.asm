@@ -18,8 +18,8 @@ section .data
 
 
 section .bss
-    num1 RESB 10
-    num2 RESB 10
+    num1 RESB 3
+    num2 RESB 3
     opp  RESB 2
     res  RESB 2
 
