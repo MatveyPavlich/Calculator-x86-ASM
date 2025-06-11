@@ -18,10 +18,11 @@ section .data
 
 
 section .bss
-    num1 RESB 3
-    num2 RESB 3
-    opp  RESB 2
-    res  RESB 2
+    num1     RESB 3
+    num1_int RESB 4
+    num2     RESB 3
+    opp      RESB 2
+    res      RESB 2
 
 section .text
     
@@ -43,7 +44,7 @@ _start:
     INT 80h
 
     CALL user_input_1
-    CALL ascii_to_int
+    CALL ascii_to_int_1
 
     ; Print message 3
     MOV eax,4
@@ -53,27 +54,22 @@ _start:
     INT 80h
 
     CALL user_input_2
-    CALL ascii_to_int
+    CALL ascii_to_int_2
+    MOV [num1_int],eax ; not entirely sure why we need brackets
 
-    ; Print message 4
-    MOV eax,4
-    MOV ebx,1
-    MOV ecx,text4
-    MOV edx,lent4
-    INT 80h
+    ; ; Print message 4
+    ; MOV eax,4
+    ; MOV ebx,1
+    ; MOV ecx,text4
+    ; MOV edx,lent4
+    ; INT 80h
 
-    CALL user_input_3
-    CALL ascii_to_int
+    ; CALL user_input_3
+
+    ADD eax,[num1_int]
 
     JMP exit
 
-
-error_print:
-    MOV eax,4
-    MOV ebx,1
-    MOV ecx,error_text
-    MOV edx,error_text_length
-    JMP exit
 
 ; ; My try 1
 ; ascii_to_int:
@@ -88,7 +84,7 @@ error_print:
 ;     RET
 
 ; GPT suggested
-ascii_to_int:
+ascii_to_int_1:
     XOR eax,eax        ; clear result
     XOR ecx,ecx
     XOR edx,edx
@@ -102,6 +98,26 @@ ascii_to_int:
 
     ; get second digit
     MOV cl,[num1 + 0x01] ; '2'
+    CMP cl, 0x0A
+    JE .newline_character
+    SUB cl,'0'           ; CL = 2
+    ADD eax,ecx          ; EAX = 4*10 + 2 = 42
+    RET
+
+ascii_to_int_2:
+    XOR eax,eax        ; clear result
+    XOR ecx,ecx
+    XOR edx,edx
+
+    ; get first digit
+    MOV al,[num2]       ; e.g. '4' = 0x3
+    SUB al,'0'          ; 0x34 - 0x30 = 0x04
+    MOVZX eax,al        ; clear upper bits
+    MOV ebx,10
+    MUL ebx              ; EAX = EAX * 10
+
+    ; get second digit
+    MOV cl,[num2 + 0x01] ; '2'
     CMP cl, 0x0A
     JE .newline_character
     SUB cl,'0'           ; CL = 2
@@ -140,6 +156,13 @@ user_input_3:
     MOV edx,2
     INT 80h
     RET
+
+error_print:
+    MOV eax,4
+    MOV ebx,1
+    MOV ecx,error_text
+    MOV edx,error_text_length
+    JMP exit
 
 exit:
     ; Exit the program
