@@ -10,7 +10,7 @@ section .data
     text3 DB  'Enter your 2nd number: ', 0x0A, 0x00 
     lent3 EQU $ - text3
 
-    text4 DB  'Pick an opperation:', 0x0A, '| 1. Add |', ' 2. Sub |', ' 3. Mul |', ' 4. Div |', 0x0A, 0x00 
+    text4 DB  'Pick an opperation: ', '| 1. Add |', ' 2. Sub |', ' 3. Mul |', ' 4. Div |', 0x0A, 0x00 
     lent4 EQU $ - text4
 
     error_text DB '2 digits max!', 0x00
@@ -42,7 +42,7 @@ _start:
     MOV edx,lent2
     INT 80h
 
-    ; Listen for 1st imput
+    ; Listen for 1st number
     MOV eax,3 ; sys_read
     MOV ebx,0 ; file descriptor 0 => stdin
     MOV ecx,num1
@@ -56,7 +56,7 @@ _start:
     MOV edx,lent3
     INT 80h
 
-    ; Listen for 2nd imput
+    ; Listen for 2nd number
     MOV eax,3
     MOV ebx,0
     MOV ecx,num2
@@ -70,7 +70,7 @@ _start:
     MOV edx,lent4
     INT 80h
     
-    ; Listen for 3rd input
+    ; Listen for the opperation
     MOV eax,3
     MOV ebx,0
     MOV ecx,opp
@@ -99,34 +99,34 @@ addition:
     ADD al,bl
     ADD al,'0'  ; Convert to ASCII
     MOV [res],al
-
-    MOV eax,4
-    MOV ebx,1
-    MOV ecx,res
-    MOV edx,2
-    INT 80h
-
-    JMP exit
+    JMP print_result
 
 subtract:
     SUB al,bl
     ADD al,'0'
     MOV [res],al
+    JMP print_result
 
+multiply:
+    MUL bl
+    ADD al, '0'
+    MOV [res],al
+    JMP print_result
+
+divide:
+    MOV ah,0
+    DIV bl
+    MOV [res],al
+    JMP print_result
+
+print_result:
     MOV eax,4
     MOV ebx,1
     MOV ecx,res
-    MOV edx,2
+    MOV edx,1
     INT 80h
 
     JMP exit
-
-multiply:
-    JMP exit
-
-divide:
-    JMP exit
-
 
 error_print:
     MOV eax,4
