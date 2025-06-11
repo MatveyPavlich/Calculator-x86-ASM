@@ -10,7 +10,7 @@ section .data
     text3 DB  'Enter your 2nd number: ', 0x0A, 0x00 
     lent3 EQU $ - text3
 
-    text4 DB  '1. Add',                  0x0A, 0x00 
+    text4 DB  'Pick an opperation:', 0x0A, '| 1. Add |', ' 2. Sub |', ' 3. Mul |', ' 4. Div |', 0x0A, 0x00 
     lent4 EQU $ - text4
 
     error_text DB '2 digits max!', 0x00
@@ -77,12 +77,27 @@ _start:
     MOV edx,2
     INT 80h
 
+    ; Identify the operration to perform
+    MOV cl,[opp]
+    SUB cl,'0'
     MOV al,[num1]       ; e.g. '4' = 0x3
     SUB al,'0'          ; 0x34 - 0x30 = 0x04
     MOV bl,[num2]
     SUB bl,'0'
+
+    CMP cl,1
+    JE addition
+    CMP cl,2
+    JE subtract
+    CMP cl,3
+    JE multiply
+    CMP cl,4
+    JE divide
+    JMP exit
+
+addition:
     ADD al,bl
-    ADD al, '0'  ; Convert to ASCII
+    ADD al,'0'  ; Convert to ASCII
     MOV [res],al
 
     MOV eax,4
@@ -91,6 +106,25 @@ _start:
     MOV edx,2
     INT 80h
 
+    JMP exit
+
+subtract:
+    SUB al,bl
+    ADD al,'0'
+    MOV [res],al
+
+    MOV eax,4
+    MOV ebx,1
+    MOV ecx,res
+    MOV edx,2
+    INT 80h
+
+    JMP exit
+
+multiply:
+    JMP exit
+
+divide:
     JMP exit
 
 
