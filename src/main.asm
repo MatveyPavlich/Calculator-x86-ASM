@@ -19,7 +19,6 @@ section .data
 
 section .bss
     num1     RESB 2
-    num1_int RESB 4
     num2     RESB 2
     opp      RESB 2
     res      RESB 2
@@ -43,9 +42,12 @@ _start:
     MOV edx,lent2
     INT 80h
 
-    CALL user_input_1
-    CALL ascii_to_int_1
-    MOV [num1_int],eax
+    ; Listen for 1st imput
+    MOV eax,3 ; sys_read
+    MOV ebx,0 ; file descriptor 0 => stdin
+    MOV ecx,num1
+    MOV edx,2
+    INT 80h
 
     ; Print message 3
     MOV eax,4
@@ -54,89 +56,43 @@ _start:
     MOV edx,lent3
     INT 80h
 
-    CALL user_input_2
-    CALL ascii_to_int_2
-    MOV [num1_int],eax ; not entirely sure why we need brackets
-
-    ; ; Print message 4
-    ; MOV eax,4
-    ; MOV ebx,1
-    ; MOV ecx,text4
-    ; MOV edx,lent4
-    ; INT 80h
-    ; CALL user_input_3
-
-    ADD eax,[num1_int]
-
-    JMP exit
-
-
-; ; My try 1
-; ascii_to_int:
-;     MOV al,[num1]
-;     SUB al, '0'
-;     MOV cl, al
-;     MOV bl,[num1 + 1]
-;     SUB bl, '0'
-;     MOV al, 0xA
-;     MUL cl,
-;     ADD bl,cl
-;     RET
-
-; GPT suggested
-ascii_to_int_1:
-    XOR eax,eax        ; clear result
-    XOR ecx,ecx
-    XOR edx,edx
-
-    ; get first digit
-    MOV al,[num1]       ; e.g. '4' = 0x3
-    SUB al,'0'          ; 0x34 - 0x30 = 0x04
-    MOVZX eax,al        ; clear upper bits
-    RET
-
-ascii_to_int_2:
-    XOR eax,eax        ; clear result
-    XOR ecx,ecx
-    XOR edx,edx
-
-    ; get first digit
-    MOV al,[num2]       ; e.g. '4' = 0x3
-    SUB al,'0'          ; 0x34 - 0x30 = 0x04
-    MOVZX eax,al        ; clear upper bits
-    RET
-
-user_input_1:
-    ; TODO: add a check to make it no more than 2 bytes (i.e., 2 characters)
-    MOV eax,3 ; sys_read
-    MOV ebx,0 ; file descriptor 0 => stdin
-    MOV ecx,num1
-    MOV edx,2
-    INT 80h
-
-    CMP eax,2
-    JG error_print
-    RET
-
-user_input_2:
+    ; Listen for 2nd imput
     MOV eax,3
     MOV ebx,0
     MOV ecx,num2
     MOV edx,2
     INT 80h
-    RET
 
-    CMP eax,2
-    JG error_print
-    RET
-
-user_input_3:
+    ; Print message 4
+    MOV eax,4
+    MOV ebx,1
+    MOV ecx,text4
+    MOV edx,lent4
+    INT 80h
+    
+    ; Listen for 3rd input
     MOV eax,3
     MOV ebx,0
     MOV ecx,opp
     MOV edx,2
     INT 80h
-    RET
+
+    MOV al,[num1]       ; e.g. '4' = 0x3
+    SUB al,'0'          ; 0x34 - 0x30 = 0x04
+    MOV bl,[num2]
+    SUB bl,'0'
+    ADD al,bl
+    ADD al, '0'  ; Convert to ASCII
+    MOV [res],al
+
+    MOV eax,4
+    MOV ebx,1
+    MOV ecx,res
+    MOV edx,2
+    INT 80h
+
+    JMP exit
+
 
 error_print:
     MOV eax,4
