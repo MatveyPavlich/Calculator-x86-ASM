@@ -1,4 +1,4 @@
-; Calculator is working for 2-digit numbers max!
+; Calculator is working for 1-digit numbers max!
 
 section .data
     text1 DB  0x0A, '|------Calculator-App-------|', 0x0A, 0x00 
@@ -18,9 +18,9 @@ section .data
 
 
 section .bss
-    num1     RESB 3
+    num1     RESB 2
     num1_int RESB 4
-    num2     RESB 3
+    num2     RESB 2
     opp      RESB 2
     res      RESB 2
 
@@ -45,6 +45,7 @@ _start:
 
     CALL user_input_1
     CALL ascii_to_int_1
+    MOV [num1_int],eax
 
     ; Print message 3
     MOV eax,4
@@ -63,7 +64,6 @@ _start:
     ; MOV ecx,text4
     ; MOV edx,lent4
     ; INT 80h
-
     ; CALL user_input_3
 
     ADD eax,[num1_int]
@@ -93,15 +93,6 @@ ascii_to_int_1:
     MOV al,[num1]       ; e.g. '4' = 0x3
     SUB al,'0'          ; 0x34 - 0x30 = 0x04
     MOVZX eax,al        ; clear upper bits
-    MOV ebx,10
-    MUL ebx              ; EAX = EAX * 10
-
-    ; get second digit
-    MOV cl,[num1 + 0x01] ; '2'
-    CMP cl, 0x0A
-    JE .newline_character
-    SUB cl,'0'           ; CL = 2
-    ADD eax,ecx          ; EAX = 4*10 + 2 = 42
     RET
 
 ascii_to_int_2:
@@ -113,31 +104,17 @@ ascii_to_int_2:
     MOV al,[num2]       ; e.g. '4' = 0x3
     SUB al,'0'          ; 0x34 - 0x30 = 0x04
     MOVZX eax,al        ; clear upper bits
-    MOV ebx,10
-    MUL ebx              ; EAX = EAX * 10
-
-    ; get second digit
-    MOV cl,[num2 + 0x01] ; '2'
-    CMP cl, 0x0A
-    JE .newline_character
-    SUB cl,'0'           ; CL = 2
-    ADD eax,ecx          ; EAX = 4*10 + 2 = 42
     RET
-
-.newline_character:
-    NOP ; user typed a single character
-
-
 
 user_input_1:
     ; TODO: add a check to make it no more than 2 bytes (i.e., 2 characters)
     MOV eax,3 ; sys_read
     MOV ebx,0 ; file descriptor 0 => stdin
     MOV ecx,num1
-    MOV edx,3
+    MOV edx,2
     INT 80h
 
-    CMP eax,3
+    CMP eax,2
     JG error_print
     RET
 
@@ -145,8 +122,12 @@ user_input_2:
     MOV eax,3
     MOV ebx,0
     MOV ecx,num2
-    MOV edx,3
+    MOV edx,2
     INT 80h
+    RET
+
+    CMP eax,2
+    JG error_print
     RET
 
 user_input_3:
