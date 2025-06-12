@@ -116,6 +116,7 @@ multiply:
 divide:
     MOV ah,0
     DIV bl
+    ADD al, '0'
     MOV [res],al
     JMP print_result
 
