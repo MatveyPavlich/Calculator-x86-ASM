@@ -1,20 +1,26 @@
 ; Calculator is working for 1-digit numbers max!
 
 section .data
-    text1 DB  0x0A, '|------Calculator-App-------|', 0x0A, 0x00 
-    lent1 EQU $ - text1
+    text1             DB         0x0A, '|------Calculator-App-------|', 0x0A, 0x00 
+    lent1             EQU        $ - text1
 
-    text2 DB  'Enter your 1st number: ', 0x0A, 0x00 
-    lent2 EQU $ - text2
+    text2             DB         'Enter your 1st number: ', 0x0A, 0x00 
+    lent2             EQU        $ - text2
 
-    text3 DB  'Enter your 2nd number: ', 0x0A, 0x00 
-    lent3 EQU $ - text3
+    text3             DB         'Enter your 2nd number: ', 0x0A, 0x00 
+    lent3             EQU        $ - text3
 
-    text4 DB  'Pick an opperation: ', '| 1. Add |', ' 2. Sub |', ' 3. Mul |', ' 4. Div |', 0x0A, 0x00 
-    lent4 EQU $ - text4
+    text4             DB         'Pick an opperation: ', '| 1. Add |', ' 2. Sub |', ' 3. Mul |', ' 4. Div |', 0x0A, 0x00 
+    lent4             EQU        $ - text4
 
-    error_text DB '2 digits max!', 0x00
-    error_text_length EQU $ - error_text
+    output_msg        DB         'Output: ', 0x00
+    output_msg_len    EQU        $ - output_msg
+
+    error_text        DB         '2 digits max!', 0x00
+    error_text_length EQU        $ - error_text
+
+    end_print         DB         0xA, 0x00
+    end_print_len     EQU        $ - end_print
 
 
 section .bss
@@ -121,6 +127,13 @@ divide:
     JMP print_result
 
 print_result:
+    ; Print output message
+    MOV eax,4
+    MOV ebx,1
+    MOV ecx,output_msg
+    MOV edx,output_msg_len
+    INT 80h
+
     MOV eax,4
     MOV ebx,1
     MOV ecx,res
@@ -137,6 +150,13 @@ error_print:
     JMP exit
 
 exit:
+    ; Print 2 extra newlines to separate the output
+    MOV eax,4
+    MOV ebx,1
+    MOV ecx,end_print
+    MOV edx,end_print_len
+    INT 80h
+
     ; Exit the program
     MOV eax,1
     MOV ebx,0
