@@ -1,4 +1,0 @@
-- If a user enters a single number, then a new line appears and a user can add another nuber
-- Create a heap to dynamically allocate memory
-
-- Reserve memory vs push onto the stack vs store in registers?
