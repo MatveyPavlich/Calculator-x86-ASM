@@ -25,6 +25,11 @@ section .data
     end_print         DB         0xA, 0x00
     end_print_len     EQU        $ - end_print
 
+    red_start         DB         0x1B, '[31m', 0 
+    red_start_len     EQU        $ - red_start       
+    reset_colour       DB         0x1B, '[0m', 0
+    reset_colour_len   EQU        $ - reset_colour
+
 
 section .bss
     memory_buffer RESB 100
@@ -166,13 +171,34 @@ print_result:
 
     JMP exit
 
+red_error_message_colour_on:
+; Set red colour to the message
+    MOV eax,4
+    MOV ebx,1
+    MOV ecx,red_start
+    MOV edx,red_start_len
+    INT 80h
+
+red_error_message_colour_off:
+; Set red colour to the message
+    MOV eax,4
+    MOV ebx,1
+    MOV ecx,reset_colour
+    MOV edx,reset_colour_len
+    INT 80h
+
 error_print_enter_pressed:
     ; Text for when user presses enter instead of a number
+    CALL red_error_message_colour_on
+
     MOV eax,4
     MOV ebx,1
     MOV ecx,error_enter_typed
     MOV edx,error_enter_typed_len
     INT 80h
+
+    CALL red_error_message_colour_off
+
     JMP exit
 
 error_print:
@@ -184,12 +210,17 @@ error_print:
     ; INT 80h
     ; ; We don’t care about result
 
+    CALL red_error_message_colour_on
+
     ; Print the error message
     MOV eax,4
     MOV ebx,1
     MOV ecx,error_text
     MOV edx,error_text_length
     INT 80h
+
+    CALL red_error_message_colour_off
+
     JMP exit
 
 exit:
