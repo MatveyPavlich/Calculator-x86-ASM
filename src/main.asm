@@ -16,7 +16,7 @@ section .data
     output_msg        DB         'Output: ', 0x00
     output_msg_len    EQU        $ - output_msg
 
-    error_text        DB         '1 digits max!', 0x00
+    error_text        DB         'Error: This calculator allows 1 digit max!', 0x00
     error_text_length EQU        $ - error_text
 
     end_print         DB         0xA, 0x00
@@ -52,7 +52,11 @@ _start:
     MOV edx,10
     INT 80h
 
-    ; Calculator for 1 digit max => 1 character + newline character 
+    ; Make sure user didn't press enter by mistake when the program started to run
+    CMP eax, 0x1 ; Was only one character entered 
+    JE error_print
+    
+    ; Check to make sure that only one digit was typed 
     CMP BYTE [memory_buffer + 0x01], 0x0A ; Is a newline a 2nd character? 
     JNE error_print
 
@@ -70,7 +74,11 @@ _start:
     MOV edx,10
     INT 80h
 
-    ; Calculator for 1 digit max => 1 character + newline character 
+    ; Make sure user didn't press enter by mistake when the program started to run
+    CMP eax, 0x1 ; Is a newline a 1st character? 
+    JE error_print
+    
+    ; Check to make sure that only one digit was typed 
     CMP BYTE [memory_buffer + 0x03], 0x0A ; Is a newline a 2nd character? 
     JNE error_print
 
@@ -88,7 +96,11 @@ _start:
     MOV edx,2
     INT 80h
 
-    ; Calculator for 1 digit max => 1 character + newline character 
+    ; Make sure user didn't press enter by mistake when the program started to run
+    CMP eax, 0x1 ; Is a newline a 1st character? 
+    JE error_print
+    
+    ; Check to make sure that only one digit was typed 
     CMP BYTE [memory_buffer + 0x05], 0x0A ; Is a newline a 2nd character? 
     JNE error_print
 
