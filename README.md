@@ -1,4 +1,4 @@
-# Calculator in x86 assembly v1
+# Calculator in x86 assembly v1.1
 ## Introduction
 - This is a simple calculator that is written in x86 assembly! My first mini-project to practice assembly.
 - Developed 2025-06-08 - 2025-06-13

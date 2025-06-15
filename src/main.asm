@@ -1,4 +1,6 @@
 ; Calculator is working for 1-digit numbers max!
+; v1.1  2025-06-15 (Sun) - Add memory buffer to avoid unexpected behaviour when user gives more than 1 number
+; Known bug: when implememnted flush_stdin the moment you enter more than one number you need to enter 2 types for the error to show
 
 section .data
     text1             DB         0x0A, '|------Calculator-App-------|', 0x0A, 0x00 
