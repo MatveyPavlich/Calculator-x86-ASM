@@ -1,7 +1,39 @@
-; Calculator - v1.1 (2025-06-15, Sun)
-; Works with 1-digit numbers only.
-; Adds memory buffer to handle unexpected multi-digit inputs.
-; Known bug: flush_stdin needs a 2nd <Enter> if more than 1 char is typed.
+; Calculator - v1.2 (2025-06-15)
+; Supports 1-digit numbers only
+; Improvements:
+; - Named memory offsets
+; - Macros for syscall boilerplate
+; - Input digit validation
+; - Divide-by-zero check
+; - Consistent quote usage
+
+%define SYS_READ     3
+%define SYS_WRITE    4
+%define SYS_EXIT     1
+
+%define FD_STDIN     0
+%define FD_STDOUT    1
+
+%define num1         memory_buffer
+%define num2         memory_buffer + 2
+%define op           memory_buffer + 4
+%define result       memory_buffer + 6
+
+%macro print 2
+    MOV eax, SYS_WRITE
+    MOV ebx, FD_STDOUT
+    MOV ecx, %1
+    MOV edx, %2
+    INT 0x80
+%endmacro
+
+%macro read 2
+    MOV eax, SYS_READ
+    MOV ebx, FD_STDIN
+    MOV ecx, %1
+    MOV edx, %2
+    INT 0x80
+%endmacro
 
 section .data
     text1             DB 0x0A, "|------Calculator-App-------|", 0x0A, 0x00 
@@ -25,6 +57,9 @@ section .data
     error_no_number   DB "ERROR: no number given -_-"
     error_no_num_len  EQU $ - error_no_number
 
+    error_div_zero    DB "ERROR: cannot divide by zero", 0x00
+    error_div_zero_len EQU $ - error_div_zero
+
     end_print         DB 0xA, 0x00
     end_print_len     EQU $ - end_print
 
@@ -34,200 +69,131 @@ section .data
     reset_colour      DB 0x1B, "[0m", 0
     reset_colour_len  EQU $ - reset_colour
 
-
 section .bss
     memory_buffer RESB 100
-
 
 section .text
 global _start
 
 _start:
-    ; Print welcome
-    MOV eax,4
-    MOV ebx,1
-    MOV ecx,text1
-    MOV edx,lent1
-    INT 0x80
+    print text1, lent1
+    print text2, lent2
+    read num1, 10
 
-    ; Prompt for 1st number
-    MOV eax,4
-    MOV ebx,1
-    MOV ecx,text2
-    MOV edx,lent2
-    INT 0x80
-
-    ; Read 1st number
-    MOV eax,3
-    MOV ebx,0
-    MOV ecx,memory_buffer
-    MOV edx,10
-    INT 0x80
-
-    CMP eax,1
+    CMP eax, 1
     JE error_print_enter_pressed
-    CMP BYTE [memory_buffer + 1], 0x0A
+    CMP BYTE [num1 + 1], 0x0A
+    JNE error_print
+    CMP BYTE [num1], '0'
+    JB error_print
+    CMP BYTE [num1], '9'
+    JA error_print
+
+    print text3, lent3
+    read num2, 10
+    CMP eax, 1
+    JE error_print_enter_pressed
+    CMP BYTE [num2 + 1], 0x0A
+    JNE error_print
+    CMP BYTE [num2], '0'
+    JB error_print
+    CMP BYTE [num2], '9'
+    JA error_print
+
+    print text4, lent4
+    read op, 2
+    CMP eax, 1
+    JE error_print_enter_pressed
+    CMP BYTE [op + 1], 0x0A
     JNE error_print
 
-    ; Prompt for 2nd number
-    MOV eax,4
-    MOV ebx,1
-    MOV ecx,text3
-    MOV edx,lent3
-    INT 0x80
+    MOV cl, [op]
+    SUB cl, '0'
 
-    ; Read 2nd number
-    MOV eax,3
-    MOV ebx,0
-    MOV ecx,memory_buffer + 2
-    MOV edx,10
-    INT 0x80
+    MOV al, [num1]
+    SUB al, '0'
+    MOV bl, [num2]
+    SUB bl, '0'
 
-    CMP eax,1
-    JE error_print_enter_pressed
-    CMP BYTE [memory_buffer + 3], 0x0A
-    JNE error_print
-
-    ; Prompt for operation
-    MOV eax,4
-    MOV ebx,1
-    MOV ecx,text4
-    MOV edx,lent4
-    INT 0x80
-
-    ; Read operation
-    MOV eax,3
-    MOV ebx,0
-    MOV ecx,memory_buffer + 4
-    MOV edx,2
-    INT 0x80
-
-    CMP eax,1
-    JE error_print_enter_pressed
-    CMP BYTE [memory_buffer + 5], 0x0A
-    JNE error_print
-
-    ; Parse operation and numbers
-    MOV cl,[memory_buffer + 4]
-    SUB cl,'0'
-    MOV al,[memory_buffer]
-    SUB al,'0'
-    MOV bl,[memory_buffer + 2]
-    SUB bl,'0'
-
-    CMP cl,1
+    CMP cl, 1
     JE addition
-    CMP cl,2
+    CMP cl, 2
     JE subtract
-    CMP cl,3
+    CMP cl, 3
     JE multiply
-    CMP cl,4
+    CMP cl, 4
     JE divide
     JMP exit
 
-
 addition:
-    ADD al,bl
-    ADD al,'0'
-    MOV [memory_buffer + 6],al
+    ADD al, bl
+    ADD al, '0'
+    MOV [result], al
     JMP print_result
 
 subtract:
-    SUB al,bl
-    ADD al,'0'
-    MOV [memory_buffer + 6],al
+    SUB al, bl
+    ADD al, '0'
+    MOV [result], al
     JMP print_result
 
 multiply:
     MUL bl
-    ADD al,'0'
-    MOV [memory_buffer + 6],al
+    ADD al, '0'
+    MOV [result], al
     JMP print_result
 
 divide:
-    MOV ah,0
+    CMP bl, 0
+    JE error_divide_by_zero
+    MOV ah, 0
     DIV bl
-    ADD al,'0'
-    MOV [memory_buffer + 6],al
+    ADD al, '0'
+    MOV [result], al
     JMP print_result
 
-
 print_result:
-    MOV eax,4
-    MOV ebx,1
-    MOV ecx,output_msg
-    MOV edx,output_msg_len
-    INT 0x80
-
-    MOV eax,4
-    MOV ebx,1
-    LEA ecx,[memory_buffer + 6]
-    MOV edx,1
-    INT 0x80
-
+    print output_msg, output_msg_len
+    print result, 1
     JMP exit
 
-
 red_error_message_colour_on:
-    MOV eax,4
-    MOV ebx,1
-    MOV ecx,red_start
-    MOV edx,red_start_len
-    INT 0x80
+    print red_start, red_start_len
     RET
 
 red_error_message_colour_off:
-    MOV eax,4
-    MOV ebx,1
-    MOV ecx,reset_colour
-    MOV edx,reset_colour_len
-    INT 0x80
+    print reset_colour, reset_colour_len
     RET
-
 
 error_print_enter_pressed:
     CALL red_error_message_colour_on
-    MOV eax,4
-    MOV ebx,1
-    MOV ecx,error_no_number
-    MOV edx,error_no_num_len
-    INT 0x80
+    print error_no_number, error_no_num_len
     CALL red_error_message_colour_off
     JMP exit
-
 
 error_print:
     CALL flush_stdin
     CALL red_error_message_colour_on
-    MOV eax,4
-    MOV ebx,1
-    MOV ecx,error_text
-    MOV edx,error_text_length
-    INT 0x80
+    print error_text, error_text_length
     CALL red_error_message_colour_off
     JMP exit
 
+error_divide_by_zero:
+    CALL red_error_message_colour_on
+    print error_div_zero, error_div_zero_len
+    CALL red_error_message_colour_off
+    JMP exit
 
 exit:
-    MOV eax,4
-    MOV ebx,1
-    MOV ecx,end_print
-    MOV edx,end_print_len
+    print end_print, end_print_len
+    MOV eax, SYS_EXIT
+    MOV ebx, 0
     INT 0x80
-
-    MOV eax,1
-    MOV ebx,0
-    INT 0x80
-
 
 flush_stdin:
 .flush_loop:
-    MOV eax,3
-    MOV ebx,0
-    MOV ecx,memory_buffer
-    MOV edx,1
-    INT 0x80
-    CMP eax,0
+    read memory_buffer, 1
+    CMP eax, 0
     JE .flush_end
     CMP BYTE [memory_buffer], 0x0A
     JNE .flush_loop
