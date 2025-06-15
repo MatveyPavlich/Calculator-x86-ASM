@@ -16,18 +16,24 @@ section .data
     output_msg        DB         'Output: ', 0x00
     output_msg_len    EQU        $ - output_msg
 
-    error_text        DB         '2 digits max!', 0x00
+    error_text        DB         'ERROR: one digit max O_o', 0x00
     error_text_length EQU        $ - error_text
+
+    error_no_number   DB         'ERROR: no number given -_-'
+    error_no_num_len  EQU        $ - error_no_number
 
     end_print         DB         0xA, 0x00
     end_print_len     EQU        $ - end_print
 
+    red_start         DB         0x1B, '[31m', 0 
+    red_start_len     EQU        $ - red_start     
+
+    reset_colour      DB         0x1B, '[0m', 0
+    reset_colour_len  EQU        $ - reset_colour
+
 
 section .bss
-    num1     RESB 2
-    num2     RESB 2
-    opp      RESB 2
-    res      RESB 2
+    memory_buffer RESB 100
 
 section .text
     
@@ -51,9 +57,17 @@ _start:
     ; Listen for 1st number
     MOV eax,3 ; sys_read
     MOV ebx,0 ; file descriptor 0 => stdin
-    MOV ecx,num1
-    MOV edx,2
+    MOV ecx,memory_buffer
+    MOV edx,10
     INT 80h
+
+    ; Make sure user didn't press enter by mistake when the program started to run
+    CMP eax, 0x1 ; Was only one character entered 
+    JE error_print_enter_pressed
+    
+    ; Check to make sure that only one digit was typed 
+    CMP BYTE [memory_buffer + 0x01], 0x0A ; Is a newline a 2nd character? 
+    JNE error_print
 
     ; Print message 3
     MOV eax,4
@@ -65,9 +79,17 @@ _start:
     ; Listen for 2nd number
     MOV eax,3
     MOV ebx,0
-    MOV ecx,num2
-    MOV edx,2
+    MOV ecx,memory_buffer + 0x02
+    MOV edx,10
     INT 80h
+
+    ; Make sure user didn't press enter by mistake when the program started to run
+    CMP eax, 0x1 ; Is a newline a 1st character? 
+    JE error_print_enter_pressed
+    
+    ; Check to make sure that only one digit was typed 
+    CMP BYTE [memory_buffer + 0x03], 0x0A ; Is a newline a 2nd character? 
+    JNE error_print
 
     ; Print message 4
     MOV eax,4
@@ -79,16 +101,24 @@ _start:
     ; Listen for the opperation
     MOV eax,3
     MOV ebx,0
-    MOV ecx,opp
+    MOV ecx,memory_buffer + 0x04
     MOV edx,2
     INT 80h
 
+    ; Make sure user didn't press enter by mistake when the program started to run
+    CMP eax, 0x1 ; Is a newline a 1st character? 
+    JE error_print_enter_pressed
+    
+    ; Check to make sure that only one digit was typed 
+    CMP BYTE [memory_buffer + 0x05], 0x0A ; Is a newline a 2nd character? 
+    JNE error_print
+
     ; Identify the operration to perform
-    MOV cl,[opp]
+    MOV cl,[memory_buffer + 0x04]
     SUB cl,'0'
-    MOV al,[num1]       ; e.g. '4' = 0x3
-    SUB al,'0'          ; 0x34 - 0x30 = 0x04
-    MOV bl,[num2]
+    MOV al,[memory_buffer]         ; e.g. '4' = 0x3
+    SUB al,'0'                     ; 0x34 - 0x30 = 0x04
+    MOV bl,[memory_buffer + 0x02]
     SUB bl,'0'
 
     CMP cl,1
@@ -104,26 +134,26 @@ _start:
 addition:
     ADD al,bl
     ADD al,'0'  ; Convert to ASCII
-    MOV [res],al
+    MOV [memory_buffer + 0x06],al
     JMP print_result
 
 subtract:
     SUB al,bl
     ADD al,'0'
-    MOV [res],al
+    MOV [memory_buffer + 0x06],al
     JMP print_result
 
 multiply:
     MUL bl
     ADD al, '0'
-    MOV [res],al
+    MOV [memory_buffer + 0x06],al
     JMP print_result
 
 divide:
     MOV ah,0
     DIV bl
     ADD al, '0'
-    MOV [res],al
+    MOV [memory_buffer + 0x06],al
     JMP print_result
 
 print_result:
@@ -136,17 +166,65 @@ print_result:
 
     MOV eax,4
     MOV ebx,1
-    MOV ecx,res
+    LEA ecx,[memory_buffer + 0x06]
     MOV edx,1
     INT 80h
 
     JMP exit
 
+; Set red colour to the message
+red_error_message_colour_on:
+    MOV eax,4
+    MOV ebx,1
+    MOV ecx,red_start
+    MOV edx,red_start_len
+    INT 80h
+    RET
+
+; Set red colour to the message
+red_error_message_colour_off:
+    MOV eax,4
+    MOV ebx,1
+    MOV ecx,reset_colour
+    MOV edx,reset_colour_len
+    INT 80h
+    RET
+
+error_print_enter_pressed:
+    ; Text for when user presses enter instead of a number
+    CALL red_error_message_colour_on
+
+    MOV eax,4
+    MOV ebx,1
+    MOV ecx,error_no_number
+    MOV edx,error_no_num_len
+    INT 80h
+
+    CALL red_error_message_colour_off
+
+    JMP exit
+
 error_print:
+    ; ; Flush stdin
+    ; MOV eax, 3         ; sys_read
+    ; MOV ebx, 0         ; stdin
+    ; MOV ecx, memory_buffer
+    ; MOV edx, 100       ; read up to 100 bytes
+    ; INT 80h
+    ; ; We don’t care about result
+    CALL flush_stdin
+
+    CALL red_error_message_colour_on
+
+    ; Print the error message
     MOV eax,4
     MOV ebx,1
     MOV ecx,error_text
     MOV edx,error_text_length
+    INT 80h
+
+    CALL red_error_message_colour_off
+
     JMP exit
 
 exit:
@@ -163,3 +241,16 @@ exit:
     INT 80h
 
 
+flush_stdin:
+flush_loop:
+    MOV eax,3
+    MOV ebx,0
+    MOV ecx,memory_buffer
+    MOV edx,1
+    INT 80h
+    CMP eax,0
+    JE flush_end
+    CMP BYTE [memory_buffer], 0x0A
+    JNE flush_loop
+flush_end:
+    RET
