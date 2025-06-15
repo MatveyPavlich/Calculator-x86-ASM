@@ -19,16 +19,17 @@ section .data
     error_text        DB         'ERROR: one digit max O_o', 0x00
     error_text_length EQU        $ - error_text
 
-    error_enter_typed DB         'ERROR: no number given -_-'
-    error_enter_typed_len EQU    $ - error_enter_typed
+    error_no_number   DB         'ERROR: no number given -_-'
+    error_no_num_len  EQU        $ - error_no_number
 
     end_print         DB         0xA, 0x00
     end_print_len     EQU        $ - end_print
 
     red_start         DB         0x1B, '[31m', 0 
-    red_start_len     EQU        $ - red_start       
-    reset_colour       DB         0x1B, '[0m', 0
-    reset_colour_len   EQU        $ - reset_colour
+    red_start_len     EQU        $ - red_start     
+
+    reset_colour      DB         0x1B, '[0m', 0
+    reset_colour_len  EQU        $ - reset_colour
 
 
 section .bss
@@ -178,6 +179,7 @@ red_error_message_colour_on:
     MOV ecx,red_start
     MOV edx,red_start_len
     INT 80h
+    RET
 
 red_error_message_colour_off:
 ; Set red colour to the message
@@ -186,6 +188,7 @@ red_error_message_colour_off:
     MOV ecx,reset_colour
     MOV edx,reset_colour_len
     INT 80h
+    RET
 
 error_print_enter_pressed:
     ; Text for when user presses enter instead of a number
@@ -193,8 +196,8 @@ error_print_enter_pressed:
 
     MOV eax,4
     MOV ebx,1
-    MOV ecx,error_enter_typed
-    MOV edx,error_enter_typed_len
+    MOV ecx,error_no_number
+    MOV edx,error_no_num_len
     INT 80h
 
     CALL red_error_message_colour_off
