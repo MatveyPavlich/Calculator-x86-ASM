@@ -212,6 +212,7 @@ error_print:
     ; MOV edx, 100       ; read up to 100 bytes
     ; INT 80h
     ; ; We don’t care about result
+    CALL flush_stdin
 
     CALL red_error_message_colour_on
 
@@ -240,3 +241,16 @@ exit:
     INT 80h
 
 
+flush_stdin:
+flush_loop:
+    MOV eax,3
+    MOV ebx,0
+    MOV ecx,memory_buffer
+    MOV edx,1
+    INT 80h
+    CMP eax,0
+    JE flush_end
+    CMP BYTE [memory_buffer], 0x0A
+    JNE flush_loop
+flush_end:
+    RET
