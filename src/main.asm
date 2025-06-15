@@ -16,8 +16,11 @@ section .data
     output_msg        DB         'Output: ', 0x00
     output_msg_len    EQU        $ - output_msg
 
-    error_text        DB         'Error: This calculator allows 1 digit max!', 0x00
+    error_text        DB         'ERROR: one digit max O_o', 0x00
     error_text_length EQU        $ - error_text
+
+    error_enter_typed DB         'ERROR: no number given -_-'
+    error_enter_typed_len EQU    $ - error_enter_typed
 
     end_print         DB         0xA, 0x00
     end_print_len     EQU        $ - end_print
@@ -54,7 +57,7 @@ _start:
 
     ; Make sure user didn't press enter by mistake when the program started to run
     CMP eax, 0x1 ; Was only one character entered 
-    JE error_print
+    JE error_print_enter_pressed
     
     ; Check to make sure that only one digit was typed 
     CMP BYTE [memory_buffer + 0x01], 0x0A ; Is a newline a 2nd character? 
@@ -76,7 +79,7 @@ _start:
 
     ; Make sure user didn't press enter by mistake when the program started to run
     CMP eax, 0x1 ; Is a newline a 1st character? 
-    JE error_print
+    JE error_print_enter_pressed
     
     ; Check to make sure that only one digit was typed 
     CMP BYTE [memory_buffer + 0x03], 0x0A ; Is a newline a 2nd character? 
@@ -98,7 +101,7 @@ _start:
 
     ; Make sure user didn't press enter by mistake when the program started to run
     CMP eax, 0x1 ; Is a newline a 1st character? 
-    JE error_print
+    JE error_print_enter_pressed
     
     ; Check to make sure that only one digit was typed 
     CMP BYTE [memory_buffer + 0x05], 0x0A ; Is a newline a 2nd character? 
@@ -163,14 +166,23 @@ print_result:
 
     JMP exit
 
-error_print:
-    ; Flush stdin
-    MOV eax, 3         ; sys_read
-    MOV ebx, 0         ; stdin
-    MOV ecx, memory_buffer
-    MOV edx, 100       ; read up to 100 bytes
+error_print_enter_pressed:
+    ; Text for when user presses enter instead of a number
+    MOV eax,4
+    MOV ebx,1
+    MOV ecx,error_enter_typed
+    MOV edx,error_enter_typed_len
     INT 80h
-    ; We don’t care about result
+    JMP exit
+
+error_print:
+    ; ; Flush stdin
+    ; MOV eax, 3         ; sys_read
+    ; MOV ebx, 0         ; stdin
+    ; MOV ecx, memory_buffer
+    ; MOV edx, 100       ; read up to 100 bytes
+    ; INT 80h
+    ; ; We don’t care about result
 
     ; Print the error message
     MOV eax,4
