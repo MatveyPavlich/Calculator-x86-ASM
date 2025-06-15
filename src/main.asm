@@ -172,8 +172,8 @@ print_result:
 
     JMP exit
 
-red_error_message_colour_on:
 ; Set red colour to the message
+red_error_message_colour_on:
     MOV eax,4
     MOV ebx,1
     MOV ecx,red_start
@@ -181,8 +181,8 @@ red_error_message_colour_on:
     INT 80h
     RET
 
-red_error_message_colour_off:
 ; Set red colour to the message
+red_error_message_colour_off:
     MOV eax,4
     MOV ebx,1
     MOV ecx,reset_colour
