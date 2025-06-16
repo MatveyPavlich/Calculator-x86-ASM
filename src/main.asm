@@ -45,9 +45,9 @@
     ; - NOT ENTIRELY SURE WHAT IS HAPPENING HERE YET. I.e., why am I getting an overflow that triggers next command in a terminal; how come after flush I need to do 22 ENTER ENTER to get a mistake and how this solves it
 
     CMP BYTE [(%1) + eax - 1], 0x0A
-    JE .skip_flush
+    JE %%skip_flush
     CALL flush_stdin
-.skip_flush:
+%%skip_flush:
 %endmacro
 
 %macro input_check 1
