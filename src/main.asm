@@ -1,11 +1,8 @@
-; Calculator - v1.2 (2025-06-15)
+; Calculator - v1.3 (2025-06-16)
 ; Supports 1-digit numbers only
 ; Improvements:
-; - Named memory offsets
-; - Macros for syscall boilerplate
-; - Input digit validation
-; - Divide-by-zero check
-; - Consistent quote usage
+; - Code comments added
+; - Macro for input check
 
 %define SYS_READ     3
 %define SYS_WRITE    4
@@ -41,22 +38,49 @@
     INT 0x80
 %endmacro
 
+%macro flush_check 1
+    ; Check if the last value from the original read is a newline
+    ; - If yes, skip the memory buffer cleaning
+    ; - If no, clean the input so that it would not overflow into a next terminal prompt
+    ; - NOT ENTIRELY SURE WHAT IS HAPPENING HERE YET. I.e., why am I getting an overflow that triggers next command in a terminal; how come after flush I need to do 22 ENTER ENTER to get a mistake and how this solves it
+
+    CMP BYTE [(%1) + eax - 1], 0x0A
+    JE .skip_flush
+    CALL flush_stdin
+.skip_flush:
+%endmacro
+
 %macro input_check 1
-    ; (%1) - input to check
-    
-    ; Disallow pressing only ENTER and not giving any number
+    ; (%1) - input buffer address (e.g., num1)
+
+    ; Check if only ENTER was pressed
     CMP eax, 1
-    JE error_print_enter_pressed
+    JE %%enter_pressed
 
-    ; Disallow any ASCII symbols except 0-9
+    ; Check for invalid ASCII digit (!= 0–9)
     CMP BYTE [%1], '0'
-    JB error_ivalid_character
+    JB %%invalid_char
     CMP BYTE [%1], '9'
-    JA error_ivalid_character
+    JA %%invalid_char
 
-    ; Disallow anything bigger than a one digit number
-    CMP BYTE [(%1) + 1], 0x0A ; Use () to indicate that this is an expression
-    JNE error_print
+    ; Check if second char is newline
+    CMP BYTE [(%1) + 1], 0x0A
+    JNE %%too_long
+
+    JMP %%ok
+
+%%enter_pressed:
+    JMP error_print_enter_pressed
+
+%%invalid_char:
+    flush_check %1
+    JMP error_ivalid_character
+
+%%too_long:
+    flush_check %1
+    JMP error_print
+
+%%ok:
 %endmacro
 
 section .data
@@ -189,14 +213,12 @@ error_print_enter_pressed:
     JMP exit
 
 error_print:
-    CALL flush_stdin
     CALL red_error_message_colour_on
     print error_text, error_text_length
     CALL red_error_message_colour_off
     JMP exit
 
 error_ivalid_character:
-    CALL flush_stdin
     CALL red_error_message_colour_on
     print error_invalid_char, error_invalid_char_len
     CALL red_error_message_colour_off
