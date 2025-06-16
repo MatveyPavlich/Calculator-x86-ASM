@@ -3,6 +3,7 @@
 ; Improvements:
 ; - Code comments added
 ; - Macro for input check
+; - Add flush check logic to remove bug that previously required to press ENTER two times before seeing an ERROR message about input being too long
 
 %define SYS_READ     3
 %define SYS_WRITE    4
