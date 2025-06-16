@@ -20,6 +20,9 @@
 %define result       memory_buffer + 6
 
 %macro print 2
+    ; (%1) - label able for the string
+    ; (%2) - length of the string
+
     MOV eax, SYS_WRITE
     MOV ebx, FD_STDOUT
     MOV ecx, %1
@@ -28,11 +31,32 @@
 %endmacro
 
 %macro read 2
+    ; (%1) - memory address to store the read
+    ; (%2) - max number of bytes to read
+
     MOV eax, SYS_READ
     MOV ebx, FD_STDIN
     MOV ecx, %1
     MOV edx, %2
     INT 0x80
+%endmacro
+
+%macro input_check 1
+    ; (%1) - input to check
+    
+    ; Disallow pressing only ENTER and not giving any number
+    CMP eax, 1
+    JE error_print_enter_pressed
+
+    ; Disallow any ASCII symbols except 0-9
+    CMP BYTE [%1], '0'
+    JB error_ivalid_character
+    CMP BYTE [%1], '9'
+    JA error_ivalid_character
+
+    ; Disallow anything bigger than a one digit number
+    CMP BYTE [(%1) + 1], 0x0A ; Use () to indicate that this is an expression
+    JNE error_print
 %endmacro
 
 section .data
@@ -51,6 +75,7 @@ section .data
     output_msg        DB "Output: ", 0x00
     output_msg_len    EQU $ - output_msg
 
+    ; Error messages
     error_text        DB "ERROR: one digit max O_o", 0x00
     error_text_length EQU $ - error_text
 
@@ -59,6 +84,9 @@ section .data
 
     error_div_zero    DB "ERROR: cannot divide by zero", 0x00
     error_div_zero_len EQU $ - error_div_zero
+
+    error_invalid_char DB "ERROR: invalid character", 0x00
+    error_invalid_char_len EQU $ - error_invalid_char
 
     end_print         DB 0xA, 0x00
     end_print_len     EQU $ - end_print
@@ -76,40 +104,29 @@ section .text
 global _start
 
 _start:
+    ; Print intro
     print text1, lent1
+    
+    ; Get the first value
     print text2, lent2
     read num1, 10
+    input_check num1
 
-    CMP eax, 1
-    JE error_print_enter_pressed
-    CMP BYTE [num1 + 1], 0x0A
-    JNE error_print
-    CMP BYTE [num1], '0'
-    JB error_print
-    CMP BYTE [num1], '9'
-    JA error_print
-
+    ; Get the second value
     print text3, lent3
     read num2, 10
-    CMP eax, 1
-    JE error_print_enter_pressed
-    CMP BYTE [num2 + 1], 0x0A
-    JNE error_print
-    CMP BYTE [num2], '0'
-    JB error_print
-    CMP BYTE [num2], '9'
-    JA error_print
+    input_check num2
 
+    ; Get the third value
     print text4, lent4
     read op, 2
-    CMP eax, 1
-    JE error_print_enter_pressed
-    CMP BYTE [op + 1], 0x0A
-    JNE error_print
+    input_check op
 
+    ; ASCII -> INT
     MOV cl, [op]
     SUB cl, '0'
-
+    
+    ; ASCII -> INT
     MOV al, [num1]
     SUB al, '0'
     MOV bl, [num2]
@@ -175,6 +192,13 @@ error_print:
     CALL flush_stdin
     CALL red_error_message_colour_on
     print error_text, error_text_length
+    CALL red_error_message_colour_off
+    JMP exit
+
+error_ivalid_character:
+    CALL flush_stdin
+    CALL red_error_message_colour_on
+    print error_invalid_char, error_invalid_char_len
     CALL red_error_message_colour_off
     JMP exit
 
