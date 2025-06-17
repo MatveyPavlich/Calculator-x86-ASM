@@ -147,16 +147,17 @@ _start:
     read op, 2
     input_check op
 
-    ; ASCII -> INT
+    ; ASCII -> INT for opperation
     MOV cl, [op]
     SUB cl, '0'
     
-    ; ASCII -> INT
+    ; ASCII -> INT for input number
     MOV al, [num1]
     SUB al, '0'
     MOV bl, [num2]
     SUB bl, '0'
 
+    ; Identify opereration
     CMP cl, 1
     JE addition
     CMP cl, 2
@@ -167,6 +168,8 @@ _start:
     JE divide
     JMP exit
 
+
+; --------------- Math opperation functions ---------------
 addition:
     ADD al, bl
     ADD al, '0'
@@ -194,11 +197,8 @@ divide:
     MOV [result], al
     JMP print_result
 
-print_result:
-    print output_msg, output_msg_len
-    print result, 1
-    JMP exit
 
+; --------------- Printing errors ---------------
 red_error_message_colour_on:
     print red_start, red_start_len
     RET
@@ -229,6 +229,12 @@ error_divide_by_zero:
     CALL red_error_message_colour_on
     print error_div_zero, error_div_zero_len
     CALL red_error_message_colour_off
+    JMP exit
+
+; --------------- Printing statements ---------------
+print_result:
+    print output_msg, output_msg_len
+    print result, 1
     JMP exit
 
 exit:
