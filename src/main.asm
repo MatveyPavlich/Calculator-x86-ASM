@@ -172,20 +172,17 @@ _start:
 ; --------------- Math opperation functions ---------------
 addition:
     ADD al, bl
-    ADD al, '0'
-    MOV [result], al
+    CALL int_to_ascii
     JMP print_result
 
 subtract:
     SUB al, bl
-    ADD al, '0'
-    MOV [result], al
+    CALL int_to_ascii
     JMP print_result
 
 multiply:
     MUL bl
-    ADD al, '0'
-    MOV [result], al
+    CALL int_to_ascii
     JMP print_result
 
 divide:
@@ -193,8 +190,7 @@ divide:
     JE error_divide_by_zero
     MOV ah, 0
     DIV bl
-    ADD al, '0'
-    MOV [result], al
+    CALL int_to_ascii
     JMP print_result
 
 
@@ -231,10 +227,31 @@ error_divide_by_zero:
     CALL red_error_message_colour_off
     JMP exit
 
+
+int_to_ascii:
+    ; Convert int to ascii by separating 10^1 and 10^0
+    MOV ah, 0   ; clear ah since will store the remainder after division
+    MOV bl, 10  ; divisor
+    DIV bl      ; do al / 10
+    ADD al, "0"
+    MOV [result], al
+    MOV al, ah
+    ADD al, "0"
+    MOV [result + 1], al
+    RET
+
 ; --------------- Printing statements ---------------
 print_result:
     print output_msg, output_msg_len
-    print result, 1
+    
+    ; If the first byte is 0 => skip (i.e., avoid printing 2 as 02)
+    CMP [result], "0"
+    JE .print_one_digit
+    print result, 2
+    JMP exit
+
+.print_one_digit:
+    print (result + 1), 1
     JMP exit
 
 exit:
