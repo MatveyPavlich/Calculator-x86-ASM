@@ -233,10 +233,10 @@ int_to_ascii:
     MOV ah, 0   ; clear ah since will store the remainder after division
     MOV bl, 10  ; divisor
     DIV bl      ; do al / 10
-    ADD al, "0"
+    ADD al, '0'
     MOV [result], al
     MOV al, ah
-    ADD al, "0"
+    ADD al, '0'
     MOV [result + 1], al
     RET
 
@@ -245,11 +245,10 @@ print_result:
     print output_msg, output_msg_len
     
     ; If the first byte is 0 => skip (i.e., avoid printing 2 as 02)
-    CMP [result], "0"
+    CMP BYTE [result], '0'
     JE .print_one_digit
     print result, 2
     JMP exit
-
 .print_one_digit:
     print (result + 1), 1
     JMP exit
