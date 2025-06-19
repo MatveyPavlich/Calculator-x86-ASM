@@ -16,6 +16,7 @@
 %define num2         memory_buffer + 2
 %define op           memory_buffer + 4
 %define result       memory_buffer + 6
+%define equation     memory_buffer + 10
 
 %macro print 2
     ; (%1) - label able for the string
@@ -153,9 +154,12 @@ _start:
     
     ; ASCII -> INT for input number
     MOV al, [num1]
+    MOV [equation], al           ; for printing final equation
     SUB al, '0'
     MOV bl, [num2]
+    MOV [equation + 2], bl       ; for printing final equation
     SUB bl, '0'
+    MOV BYTE [equation + 3], '=' ; for printing final equation
 
     ; Identify opereration
     CMP cl, 1
@@ -171,21 +175,25 @@ _start:
 
 ; --------------- Math opperation functions ---------------
 addition:
+    MOV BYTE [equation + 1], '+'
     ADD al, bl
     CALL int_to_ascii
     JMP print_result
 
 subtract:
+    MOV BYTE [equation + 1], '-'
     SUB al, bl
     CALL int_to_ascii
     JMP print_result
 
 multiply:
+    MOV BYTE [equation + 1], '*'
     MUL bl
     CALL int_to_ascii
     JMP print_result
 
 divide:
+    MOV BYTE [equation + 1], '/'
     CMP bl, 0
     JE error_divide_by_zero
     MOV ah, 0
@@ -244,16 +252,21 @@ int_to_ascii:
 ; --------------- Printing statements ---------------
 print_result:
     print output_msg, output_msg_len
+    MOV ax, 0
     
     ; If the first byte is 0 => skip (i.e., avoid printing 2 as 02)
     CMP BYTE [result], '0'
     JE .print_one_digit
     
     ; Otherwise print 2 numbers
-    print result, 2
+    MOV ax, [result]
+    MOV [equation + 4], ax
+    print equation, 6
     JMP exit
 .print_one_digit:
-    print (result + 1), 1
+    MOV al, [result + 1]
+    MOV [equation + 4], al
+    print equation, 5
     JMP exit
 
 exit:
