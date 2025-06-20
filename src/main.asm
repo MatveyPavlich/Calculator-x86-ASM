@@ -16,6 +16,7 @@
 %define num2         memory_buffer + 2
 %define op           memory_buffer + 4
 %define result       memory_buffer + 6
+%define equation     memory_buffer + 10
 
 %macro print 2
     ; (%1) - label able for the string
@@ -88,14 +89,17 @@ section .data
     text1                  DB 0x0A, "|------Calculator-App-------|", 0x0A, 0x00 
     lent1                  EQU $ - text1
 
-    text2                  DB "Enter your 1st number: ", 0x0A, 0x00 
+    text2                  DB "Enter your 1st number: ", 0x00 
     lent2                  EQU $ - text2
 
-    text3                  DB "Enter your 2nd number: ", 0x0A, 0x00 
+    text3                  DB "Enter your 2nd number: ", 0x00 
     lent3                  EQU $ - text3
 
-    text4                  DB "Pick an operation: | 1. Add | 2. Sub | 3. Mul | 4. Div |", 0x0A, 0x00 
+    text4                  DB "Avaliable Operations: (1) Add (2) Sub (3) Mul (4) Div", 0x0A, 0x00 
     lent4                  EQU $ - text4
+
+    text5                  DB "Pick an operation: ", 0x00
+    len5                   EQU $ - text5
 
     output_msg             DB "Output: ", 0x00
     output_msg_len         EQU $ - output_msg
@@ -144,6 +148,7 @@ _start:
 
     ; Get the third value
     print text4, lent4
+    print text5, len5
     read op, 2
     input_check op
 
@@ -153,9 +158,12 @@ _start:
     
     ; ASCII -> INT for input number
     MOV al, [num1]
+    MOV [equation], al           ; for printing final equation
     SUB al, '0'
     MOV bl, [num2]
+    MOV [equation + 2], bl       ; for printing final equation
     SUB bl, '0'
+    MOV BYTE [equation + 3], '=' ; for printing final equation
 
     ; Identify opereration
     CMP cl, 1
@@ -171,21 +179,25 @@ _start:
 
 ; --------------- Math opperation functions ---------------
 addition:
+    MOV BYTE [equation + 1], '+'
     ADD al, bl
     CALL int_to_ascii
     JMP print_result
 
 subtract:
+    MOV BYTE [equation + 1], '-'
     SUB al, bl
     CALL int_to_ascii
     JMP print_result
 
 multiply:
+    MOV BYTE [equation + 1], '*'
     MUL bl
     CALL int_to_ascii
     JMP print_result
 
 divide:
+    MOV BYTE [equation + 1], '/'
     CMP bl, 0
     JE error_divide_by_zero
     MOV ah, 0
@@ -244,16 +256,21 @@ int_to_ascii:
 ; --------------- Printing statements ---------------
 print_result:
     print output_msg, output_msg_len
+    MOV ax, 0
     
     ; If the first byte is 0 => skip (i.e., avoid printing 2 as 02)
     CMP BYTE [result], '0'
     JE .print_one_digit
     
     ; Otherwise print 2 numbers
-    print result, 2
+    MOV ax, [result]
+    MOV [equation + 4], ax
+    print equation, 6
     JMP exit
 .print_one_digit:
-    print (result + 1), 1
+    MOV al, [result + 1]
+    MOV [equation + 4], al
+    print equation, 5
     JMP exit
 
 exit:
