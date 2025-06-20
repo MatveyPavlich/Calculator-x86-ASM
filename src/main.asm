@@ -55,6 +55,10 @@
 %macro input_check 1
     ; (%1) - input buffer address (e.g., num1)
 
+    ; TODO: this is a temporary solution to ignore any checks if first digit is a sign
+    CMP BYTE [%1], '-'
+    JE %%ok
+
     ; Check if only ENTER was pressed
     CMP eax, 1
     JE %%enter_pressed
@@ -155,16 +159,39 @@ _start:
     ; ASCII -> INT for opperation
     MOV cl, [op]
     SUB cl, '0'
-    
-    ; ASCII -> INT for input number
-    MOV al, [num1]
-    MOV [equation], al           ; for printing final equation
-    SUB al, '0'
-    MOV bl, [num2]
-    MOV [equation + 2], bl       ; for printing final equation
-    SUB bl, '0'
-    MOV BYTE [equation + 3], '=' ; for printing final equation
+    JMP identify_first_num
 
+identify_first_num:
+    ; ASCII -> INT for input number
+    MOV ah, [num1]
+    MOV al, [num1 + 1]
+    CMP ah, '-'
+    JE negative_logic
+    
+    ; Non negative
+    MOV [equation], al
+    MOV al, 0
+    MOV al, ah
+    SUB al, '0'
+    JMP identify_second_num
+
+negative_logic:
+    ; TODO: fix printing of the equation since now will have 2 bytes
+    MOV [equation], ah           ; for printing final equation
+    MOV [equation + 1], al
+    SUB al, '0' 
+    NEG al
+    JMP identify_second_num
+
+identify_second_num:
+    MOV bl, [num2]
+    MOV [equation + 3], bl       ; for printing final equation
+    SUB bl, '0'
+    MOV BYTE [equation + 4], '=' ; for printing final equation
+    JMP identify_operation
+
+
+identify_operation:
     ; Identify opereration
     CMP cl, 1
     JE addition
@@ -179,10 +206,18 @@ _start:
 
 ; --------------- Math opperation functions ---------------
 addition:
-    MOV BYTE [equation + 1], '+'
+    MOV BYTE [equation + 2], '+'
     ADD al, bl
+
+    JS .negative
     CALL int_to_ascii
     JMP print_result
+.negative:
+    NEG al
+    MOV BYTE [equation + 5], '-'
+    CALL int_to_ascii
+    JMP print_result
+
 
 subtract:
     MOV BYTE [equation + 1], '-'
@@ -264,13 +299,13 @@ print_result:
     
     ; Otherwise print 2 numbers
     MOV ax, [result]
-    MOV [equation + 4], ax
-    print equation, 6
+    MOV [equation + 5], ax
+    print equation, 7
     JMP exit
 .print_one_digit:
     MOV al, [result + 1]
-    MOV [equation + 4], al
-    print equation, 5
+    MOV [equation + 5], al
+    print equation, 6
     JMP exit
 
 exit:
