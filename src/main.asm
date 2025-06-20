@@ -89,14 +89,17 @@ section .data
     text1                  DB 0x0A, "|------Calculator-App-------|", 0x0A, 0x00 
     lent1                  EQU $ - text1
 
-    text2                  DB "Enter your 1st number: ", 0x0A, 0x00 
+    text2                  DB "Enter your 1st number: ", 0x00 
     lent2                  EQU $ - text2
 
-    text3                  DB "Enter your 2nd number: ", 0x0A, 0x00 
+    text3                  DB "Enter your 2nd number: ", 0x00 
     lent3                  EQU $ - text3
 
-    text4                  DB "Pick an operation: | 1. Add | 2. Sub | 3. Mul | 4. Div |", 0x0A, 0x00 
+    text4                  DB "Avaliable Operations: (1) Add (2) Sub (3) Mul (4) Div", 0x0A, 0x00 
     lent4                  EQU $ - text4
+
+    text5                  DB "Pick an operation: ", 0x00
+    len5                   EQU $ - text5
 
     output_msg             DB "Output: ", 0x00
     output_msg_len         EQU $ - output_msg
@@ -145,6 +148,7 @@ _start:
 
     ; Get the third value
     print text4, lent4
+    print text5, len5
     read op, 2
     input_check op
 
