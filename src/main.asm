@@ -13,10 +13,12 @@
 %define FD_STDOUT    1
 
 %define num1         memory_buffer
-%define num2         memory_buffer + 2
-%define op           memory_buffer + 4
-%define result       memory_buffer + 6
-%define equation     memory_buffer + 10
+%define num1_len     memory_buffer + 4
+%define num2         memory_buffer + 8
+%define num2_len     memory_buffer + 12
+%define op           memory_buffer + 16
+%define result       memory_buffer + 20
+%define equation     memory_buffer + 24
 
 %macro print 2
     ; (%1) - label able for the string
@@ -72,7 +74,7 @@
 
 %%check_digit:
     ; Check if digit is valid
-    MOV al, BYTE [%1 + edx]
+    MOV al, BYTE [%1 + edx] ; Add an offset to get the actual number
     CMP al, '0'
     JB %%invalid_char
     CMP al, '9'
