@@ -10,6 +10,9 @@ v1.4 (WIP)
     e.g., currently 7*8 gives giberrish
 - Print the whole equation in a terminal (To get used to printing stuff for Data Structures projects) ✅ (dev)
 - Implement support for sign numbers (WIP)
+    - Adjust validation tests to account for -
+    - Implement for addition only (single number)
+    - Make sure equation is printed ok (add brackets when sign is added)
 
 v1.3 (merged to master)
 Improvements:

@@ -53,30 +53,37 @@
 %endmacro
 
 %macro input_check 1
-    ; (%1) - input buffer address (e.g., num1)
-
-    ; TODO: this is a temporary solution to ignore any checks if first digit is a sign
-    CMP BYTE [%1], '-'
-    JE %%ok
+    ; (%1) - input buffer address
 
     ; Check if only ENTER was pressed
     CMP eax, 1
-    JE %%enter_pressed
+    JE error_print_enter_pressed
 
-    ; Check for invalid ASCII digit (!= 0–9)
-    CMP BYTE [%1], '0'
+    ; See if signed value
+    MOV dl, 0               ; offset for the digit byte = 0 by default
+    CMP BYTE [%1], '-'
+    JE %%signed_val
+    CMP BYTE [%1], '+'
+    JE %%signed_val
+    JMP %%check_digit
+
+%%signed_val:
+    MOV dl, 1               ; skip the '+' or '-'
+
+%%check_digit:
+    ; Check if digit is valid
+    MOV al, BYTE [%1 + edx]
+    CMP al, '0'
     JB %%invalid_char
-    CMP BYTE [%1], '9'
+    CMP al, '9'
     JA %%invalid_char
 
-    ; Check if second char is newline
-    CMP BYTE [(%1) + 1], 0x0A
+    ; Check if the next char is newline
+    MOV al, BYTE [%1 + edx + 1]
+    CMP al, 0x0A
     JNE %%too_long
 
     JMP %%ok
-
-%%enter_pressed:
-    JMP error_print_enter_pressed
 
 %%invalid_char:
     flush_check %1
@@ -88,6 +95,7 @@
 
 %%ok:
 %endmacro
+
 
 section .data
     text1                  DB 0x0A, "|------Calculator-App-------|", 0x0A, 0x00 
