@@ -42,13 +42,15 @@
     INT 0x80
 %endmacro
 
-%macro flush_check 1
+%macro flush_check 2
+    ; (%1) = start address of the user input
+    ; (%2) = total characters entered by user into kernel buffer
     ; Check if the last value from the original read is a newline
     ; - If yes, skip the memory buffer cleaning
     ; - If no, clean the input so that it would not overflow into a next terminal prompt
     ; - NOT ENTIRELY SURE WHAT IS HAPPENING HERE YET. I.e., why am I getting an overflow that triggers next command in a terminal; how come after flush I need to do 22 ENTER ENTER to get a mistake and how this solves it
 
-    CMP BYTE [(%1) + eax - 1], 0x0A
+    CMP BYTE [(%1 + %2 - 1)], 0x0A
     JE %%skip_flush
     CALL flush_stdin
 %%skip_flush:
@@ -57,8 +59,10 @@
 %macro input_check 1
     ; (%1) - input buffer address
 
+    MOV ecx, [num1_len]
+
     ; Check if only ENTER was pressed
-    CMP eax, 1
+    CMP eax, 1                    ; eax stores the length of an input by user
     JE error_print_enter_pressed
 
     ; See if signed value
@@ -88,11 +92,11 @@
     JMP %%ok
 
 %%invalid_char:
-    flush_check %1
+    flush_check %1, ecx
     JMP error_ivalid_character
 
 %%too_long:
-    flush_check %1
+    flush_check %1, ecx
     JMP error_print
 
 %%ok:
@@ -153,6 +157,7 @@ _start:
     ; Get the first value
     print text2, lent2
     read num1, 10
+    MOV [num1_len], eax
     input_check num1
 
     ; Get the second value
