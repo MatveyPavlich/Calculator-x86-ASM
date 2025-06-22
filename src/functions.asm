@@ -35,13 +35,21 @@ exit:
 
 ; ========== SECTION 2: Input Handling Utilities ==========
 
-%macro flush_check 1                ; (%1) - input memory address (e.g., num1)
+;------------------------------------------
+; void flush_check(Buffer input)
+; Flush remaining characters from STDIN if input buffer wasn't fully consumed
+; (%1) - address of the input buffer (e.g., num1)
+%macro flush_check 1
     CMP BYTE [(%1) + eax - 1], 0x0A ; Check the last value from the original read
     JE %%skip_flush                 ; Don't need a kernel buffer flush if last character is a newline
     CALL flush_stdin                ; Need to flush if the last character is not a newline
 %%skip_flush:
 %endmacro
 
+;------------------------------------------
+; void input_check(Buffer input)
+; Validates a 1-digit input (0–9) or raises errors
+; (%1) - address of the input buffer (e.g., num1)
 %macro input_check 1                ; (%1) - input memory address (e.g., num1)
     CMP eax, 1                      ; eax stores input length. See if 1 character was given (i.e., ENTER)
     JE %%enter_pressed              ; print "No numbers given" error
@@ -89,8 +97,6 @@ multiply:
     MUL bl
     CALL int_to_ascii
     JMP print_result
-
-
 
 divide:
     MOV BYTE [equation + 1], '/'
