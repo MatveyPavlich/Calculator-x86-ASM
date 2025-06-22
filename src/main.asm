@@ -3,7 +3,9 @@
 ; Improvements:
 ; - 2 digit result is avaliable (e.g. 8*8 does not return giberish)
 ; - Full equation is printed in the output
-; - Code made more modular
+; - Code made more modular by creating data.asm and functions.asm
+
+%include "./src/data.asm"
 
 %define SYS_READ     3
 %define SYS_WRITE    4
@@ -17,8 +19,6 @@
 %define op           memory_buffer + 4
 %define result       memory_buffer + 6
 %define equation     memory_buffer + 10
-
-%include 'data.asm'
 
 %macro print 2
     ; (%1) - label able for the string
