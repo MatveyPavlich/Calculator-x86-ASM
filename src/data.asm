@@ -23,20 +23,17 @@ section .data
     output_msg_len         EQU $ - output_msg
 
     ; Error messages     
-    error_text             DB "ERROR: one digit max O_o", 0x00
+    error_text             DB "ERROR: one digit max O_o", 0xA, 0x00
     error_text_length      EQU $ - error_text
 
-    error_no_number        DB "ERROR: no number given -_-"
+    error_no_number        DB "ERROR: no number given -_-", 0xA, 0x00
     error_no_num_len       EQU $ - error_no_number
 
-    error_div_zero         DB "ERROR: cannot divide by zero", 0x00
+    error_div_zero         DB "ERROR: cannot divide by zero", 0xA, 0x00
     error_div_zero_len     EQU $ - error_div_zero
 
-    error_invalid_char     DB "ERROR: invalid character", 0x00
+    error_invalid_char     DB "ERROR: invalid character", 0xA, 0x00
     error_invalid_char_len EQU $ - error_invalid_char
-
-    end_print              DB 0xA, 0x00
-    end_print_len          EQU $ - end_print
 
     red_start              DB 0x1B, "[31m", 0 
     red_start_len          EQU $ - red_start

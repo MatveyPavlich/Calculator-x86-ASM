@@ -1,9 +1,11 @@
+; ========== SECTION 1: System Call Wrappers ==========
+
 %macro print 2
     ; (%1) - label able for the string
     ; (%2) - length of the string
 
-    MOV eax, SYS_WRITE
-    MOV ebx, FD_STDOUT
+    MOV eax, 4      ; SYS_WRITE
+    MOV ebx, 1      ; FD_STDOUT
     MOV ecx, %1
     MOV edx, %2
     INT 0x80
@@ -13,12 +15,20 @@
     ; (%1) - memory address to store the read
     ; (%2) - max number of bytes to read
 
-    MOV eax, SYS_READ
-    MOV ebx, FD_STDIN
+    MOV eax, 3    ; SYS_READ
+    MOV ebx, 0    ; FD_STDIN
     MOV ecx, %1
     MOV edx, %2
     INT 0x80
 %endmacro
+
+exit:
+    MOV eax, 1  ; SYS_EXIT
+    MOV ebx, 0  ; FD_STDIN
+    INT 0x80
+
+
+; ========== SECTION 2: Input Handling Utilities ==========
 
 %macro flush_check 1
     ; Check if the last value from the original read is a newline
@@ -65,218 +75,114 @@
 %%ok:
 %endmacro
 
-; --------------- Math opperation functions ---------------
+; ========== SECTION 5: Math Operations ==========
 
 addition:
-
     MOV BYTE [equation + 1], '+'
-
     ADD al, bl
-
     CALL int_to_ascii
-
     JMP print_result
-
-
 
 subtract:
-
     MOV BYTE [equation + 1], '-'
-
     SUB al, bl
-
     CALL int_to_ascii
-
     JMP print_result
 
-
-
 multiply:
-
     MOV BYTE [equation + 1], '*'
-
     MUL bl
-
     CALL int_to_ascii
-
     JMP print_result
 
 
 
 divide:
-
     MOV BYTE [equation + 1], '/'
-
     CMP bl, 0
-
     JE error_divide_by_zero
-
     MOV ah, 0
-
     DIV bl
-
     CALL int_to_ascii
-
     JMP print_result
 
 
-
-
-
-; --------------- Printing errors ---------------
-
+; ========== SECTION 3: Output Utilities ==========
 red_error_message_colour_on:
-
     print red_start, red_start_len
-
     RET
-
-
 
 red_error_message_colour_off:
-
     print reset_colour, reset_colour_len
-
     RET
-
-
 
 error_print_enter_pressed:
-
     CALL red_error_message_colour_on
-
     print error_no_number, error_no_num_len
-
     CALL red_error_message_colour_off
-
     JMP exit
-
-
 
 error_print:
-
     CALL red_error_message_colour_on
-
     print error_text, error_text_length
-
     CALL red_error_message_colour_off
-
     JMP exit
-
-
 
 error_ivalid_character:
-
     CALL red_error_message_colour_on
-
     print error_invalid_char, error_invalid_char_len
-
     CALL red_error_message_colour_off
-
     JMP exit
-
-
 
 error_divide_by_zero:
-
     CALL red_error_message_colour_on
-
     print error_div_zero, error_div_zero_len
-
     CALL red_error_message_colour_off
-
     JMP exit
 
-
-
-
-
-; -------------- Conversion between formats -------------------------
-
+; ========== SECTION 4: Conversion Helpers ==========
 int_to_ascii:
-
     ; Convert int to ascii by separating 10^1 and 10^0
-
     MOV ah, 0            ; Clean ah since will store the remainder after division
-
     MOV bl, 10           ; divisor
-
     DIV bl               ; do al / 10
-
     ADD al, '0'
-
     MOV [result], al
-
     MOV al, ah
-
     ADD al, '0'
-
     MOV [result + 1], al
-
     RET
-
-
 
 ; --------------- Printing statements ---------------
 
 print_result:
-
     print output_msg, output_msg_len
-
     MOV ax, 0
 
-    
-
     ; If the first byte is 0 => skip (i.e., avoid printing 2 as 02)
-
     CMP BYTE [result], '0'
-
     JE .print_one_digit
 
-    
-
     ; Otherwise print 2 numbers
-
     MOV ax, [result]
-
     MOV [equation + 4], ax
-
-    print equation, 6
-
+    MOV BYTE [equation + 6], 0xA
+    print equation, 7
     JMP exit
 
 .print_one_digit:
-
     MOV al, [result + 1]
-
     MOV [equation + 4], al
-
-    print equation, 5
-
+    MOV BYTE [equation + 5], 0xA
+    print equation, 6
     JMP exit
 
-
-
 flush_stdin:
-
 .flush_loop:
-
     read memory_buffer, 1
-
     CMP eax, 0
-
     JE .flush_end
-
     CMP BYTE [memory_buffer], 0x0A
-
     JNE .flush_loop
-
 .flush_end:
-
     RET
-
-exit:
-    print end_print, end_print_len
-    MOV eax, SYS_EXIT
-    MOV ebx, 0
-    INT 0x80

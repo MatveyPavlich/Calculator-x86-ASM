@@ -5,14 +5,6 @@
 ; - Full equation is printed in the output
 ; - Code made more modular by creating data.asm and functions.asm
 
-
-%define SYS_READ     3
-%define SYS_WRITE    4
-%define SYS_EXIT     1
-
-%define FD_STDIN     0
-%define FD_STDOUT    1
-
 %define num1         memory_buffer
 %define num2         memory_buffer + 2
 %define op           memory_buffer + 4
