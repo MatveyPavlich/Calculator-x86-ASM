@@ -1,76 +1,71 @@
 ; ========== SECTION 1: System Call Wrappers ==========
 
+;------------------------------------------
+; void print(String message, int length)
+; Print a string to STDOUT using syscall
 %macro print 2
-    ; (%1) - label able for the string
-    ; (%2) - length of the string
-
     MOV eax, 4      ; SYS_WRITE
     MOV ebx, 1      ; FD_STDOUT
-    MOV ecx, %1
-    MOV edx, %2
+    MOV ecx, %1     ; string label
+    MOV edx, %2     ; string length
     INT 0x80
 %endmacro
 
+;------------------------------------------
+; void read(Buffer destination, int max_length)
+; Read input from STDIN into a memory buffer using syscall
 %macro read 2
-    ; (%1) - memory address to store the read
-    ; (%2) - max number of bytes to read
-
-    MOV eax, 3    ; SYS_READ
-    MOV ebx, 0    ; FD_STDIN
-    MOV ecx, %1
-    MOV edx, %2
+    MOV eax, 3     ; SYS_READ
+    MOV ebx, 0     ; FD_STDIN
+    MOV ecx, %1    ; label to store the read
+    MOV edx, %2    ; max number of bytes to read
     INT 0x80
 %endmacro
 
+;------------------------------------------
+; void exit()
+; Exit the program
 exit:
-    MOV eax, 1  ; SYS_EXIT
-    MOV ebx, 0  ; FD_STDIN
+    MOV eax, 1     ; SYS_EXIT
+    MOV ebx, 0     ; FD_STDIN
     INT 0x80
+
+
 
 
 ; ========== SECTION 2: Input Handling Utilities ==========
 
-%macro flush_check 1
-    ; Check if the last value from the original read is a newline
-    ; - If yes, skip the memory buffer cleaning
-    ; - If no, clean the input so that it would not overflow into a next terminal prompt
-    ; - NOT ENTIRELY SURE WHAT IS HAPPENING HERE YET. I.e., why am I getting an overflow that triggers next command in a terminal; how come after flush I need to do 22 ENTER ENTER to get a mistake and how this solves it
-
-    CMP BYTE [(%1) + eax - 1], 0x0A
-    JE %%skip_flush
-    CALL flush_stdin
+%macro flush_check 1                ; (%1) - input memory address (e.g., num1)
+    CMP BYTE [(%1) + eax - 1], 0x0A ; Check the last value from the original read
+    JE %%skip_flush                 ; Don't need a kernel buffer flush if last character is a newline
+    CALL flush_stdin                ; Need to flush if the last character is not a newline
 %%skip_flush:
 %endmacro
 
-%macro input_check 1
-    ; (%1) - input buffer address (e.g., num1)
+%macro input_check 1                ; (%1) - input memory address (e.g., num1)
+    CMP eax, 1                      ; eax stores input length. See if 1 character was given (i.e., ENTER)
+    JE %%enter_pressed              ; print "No numbers given" error
 
-    ; Check if only ENTER was pressed
-    CMP eax, 1
-    JE %%enter_pressed
+    CMP BYTE [%1], '0'              ; Check if an ASCII character < 0
+    JB %%invalid_char               ; Print error message
+    CMP BYTE [%1], '9'              ; Check if an ASCII character > 9
+    JA %%invalid_char               ; Print error message
 
-    ; Check for invalid ASCII digit (!= 0–9)
-    CMP BYTE [%1], '0'
-    JB %%invalid_char
-    CMP BYTE [%1], '9'
-    JA %%invalid_char
+    CMP BYTE [(%1) + 1], 0x0A       ; Make sure 2nd ASCII character is a newline
+    JNE %%too_long                  ; Print error message if not
 
-    ; Check if second char is newline
-    CMP BYTE [(%1) + 1], 0x0A
-    JNE %%too_long
-
-    JMP %%ok
+    JMP %%ok                        ; Finish check if no errors detected
 
 %%enter_pressed:
-    JMP error_print_enter_pressed
+    JMP error_print_enter_pressed   ; print "No numbers given" error
 
 %%invalid_char:
-    flush_check %1
-    JMP error_ivalid_character
+    flush_check %1                  ; Flush kernel buffer for input to not overflow into shell
+    JMP error_ivalid_character      ; Print "Invalid character" error
 
 %%too_long:
-    flush_check %1
-    JMP error_print
+    flush_check %1                  ; Flush kernel buffer for input to not overflow into shell
+    JMP error_print                 ; Print "Single digit only" error
 
 %%ok:
 %endmacro
