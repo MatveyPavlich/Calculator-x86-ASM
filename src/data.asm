@@ -1,3 +1,8 @@
+; For some reason need to have .bss before .data otherwise get:
+;   warning: attempt to initialize memory in BSS section `.bss': ignored
+section .bss
+    memory_buffer RESB 100
+
 section .data
     text1                  DB 0x0A, "|------Calculator-App-------|", 0x0A, 0x00 
     lent1                  EQU $ - text1
@@ -38,5 +43,3 @@ section .data
 
     reset_colour           DB 0x1B, "[0m", 0
     reset_colour_len       EQU $ - reset_colour
-
-
