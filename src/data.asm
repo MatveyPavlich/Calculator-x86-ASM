@@ -39,5 +39,4 @@ section .data
     reset_colour           DB 0x1B, "[0m", 0
     reset_colour_len       EQU $ - reset_colour
 
-section .bss
-    memory_buffer RESB 100
+
