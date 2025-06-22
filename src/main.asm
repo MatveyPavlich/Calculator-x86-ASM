@@ -1,9 +1,9 @@
-; Calculator - v1.3 (2025-06-16)
+; Calculator - v1.4 (2025-06-16)
 ; Supports 1-digit numbers only
 ; Improvements:
-; - Code comments added
-; - Macro for input check
-; - Add flush check logic to remove bug that previously required to press ENTER two times before seeing an ERROR message about input being too long
+; - 2 digit result is avaliable (e.g. 8*8 does not return giberish)
+; - Full equation is printed in the output
+; - Code made more modular
 
 %define SYS_READ     3
 %define SYS_WRITE    4
