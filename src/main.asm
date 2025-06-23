@@ -6,10 +6,10 @@
 ; - Code made more modular by creating data.asm and functions.asm
 
 %define num1         memory_buffer
-%define num2         memory_buffer + 2
-%define op           memory_buffer + 4
-%define result       memory_buffer + 6
-%define equation     memory_buffer + 10
+%define num2         memory_buffer + 3
+%define op           memory_buffer + 6
+%define result       memory_buffer + 9
+%define equation     memory_buffer + 12
     
 %include "./src/data.asm"
 %include "./src/functions.asm"
@@ -18,37 +18,29 @@ section .text
 global _start
 
 _start:
-    ; Print intro
-    print text1, lent1
-    
-    ; Get the first value
-    print text2, lent2
-    read num1, 10
-    input_check num1
+    ; Get all values
+    print text1, lent1              ; Print welcome message
+    print text2, lent2              ; Ask user for the first operand
+    read num1, 10                   ; Read user input using a syscall
+    input_check num1                ; Check the input is valid
+    print text3, lent3              ; Ask user for the second operand
+    read num2, 10                   ; Read user input using a syscall
+    input_check num2                ; Check the input is valid
+    print text4, lent4              ; Display available operations
+    print text5, len5               ; Ask user for the operation
+    read op, 2                      ; Read user input using a syscall
+    input_check op                  ; Check the input is valid
 
-    ; Get the second value
-    print text3, lent3
-    read num2, 10
-    input_check num2
-
-    ; Get the third value
-    print text4, lent4
-    print text5, len5
-    read op, 2
-    input_check op
-
-    ; ASCII -> INT for opperation
-    MOV cl, [op]
-    SUB cl, '0'
-    
-    ; ASCII -> INT for input number
-    MOV al, [num1]
-    MOV [equation], al           ; for printing final equation
-    SUB al, '0'
-    MOV bl, [num2]
-    MOV [equation + 2], bl       ; for printing final equation
-    SUB bl, '0'
-    MOV BYTE [equation + 3], '=' ; for printing final equation
+    ; ASCII -> INT conversion
+    MOV cl, [op]                    ; Move the opperation code into cl
+    SUB cl, '0'                     ; Covert ascii to int
+    MOV al, [num1]                  ; Move num1 into al
+    MOV [equation], al              ; Write al into memory to print enquation later
+    SUB al, '0'                     ; Covert ascii to int
+    MOV bl, [num2]                  ; Move num2 into bl
+    MOV [equation + 2], bl          ; Write bl into memory to print enquation later
+    SUB bl, '0'                     ; Covert ascii to int
+    MOV BYTE [equation + 3], '='    ; Write = into memory to print equation later
 
     ; Identify opereration
     CMP cl, 1

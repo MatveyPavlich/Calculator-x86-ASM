@@ -1,5 +1,4 @@
 Features to add:
-- Implement support for sign numbers
 - Implement support for floating point arithmetics
 - When there is a bad imput program restarts and user is prompted to add a number another time (rather than exiting a program) ⭐️⭐️⭐️
 - Allow user to select stuff with arrows
@@ -9,6 +8,7 @@ v1.4
 - Display correctly 2 digit result for multiplication ✅
     e.g., currently 7*8 gives giberrish
 - Print the whole equation in a terminal (To get used to printing stuff for Data Structures projects) ✅
+- Implement support for sign numbers (WIP)
 
 v1.3
 Improvements:
