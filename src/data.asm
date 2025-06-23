@@ -4,27 +4,28 @@ section .bss
     memory_buffer RESB 100
 
 section .data
-    text1                  DB 0x0A, "|------Calculator-App-------|", 0x0A, 0x00 
-    lent1                  EQU $ - text1
+; ========== SECTION 1: Main program messages ==========
+    welcome_msg            DB 0x0A, "|------Calculator-App-------|", 0x0A, 0x00 
+    welcome_msg_len        EQU $ - welcome_msg
 
-    text2                  DB "Enter your 1st number: ", 0x00 
-    lent2                  EQU $ - text2
+    ask_input_1            DB "Enter your 1st number: ", 0x00 
+    ask_input_1_len        EQU $ - ask_input_1
 
-    text3                  DB "Enter your 2nd number: ", 0x00 
-    lent3                  EQU $ - text3
+    ask_input_2            DB "Enter your 2nd number: ", 0x00 
+    ask_input_2_len        EQU $ - ask_input_2
 
-    text4                  DB "Avaliable Operations: (1) Add (2) Sub (3) Mul (4) Div", 0x0A, 0x00 
-    lent4                  EQU $ - text4
+    show_oprtns            DB "Avaliable Operations: (1) Add (2) Sub (3) Mul (4) Div", 0x0A, 0x00 
+    show_oprtns_len        EQU $ - show_oprtns
 
-    text5                  DB "Pick an operation: ", 0x00
-    len5                   EQU $ - text5
+    ask_oprtn              DB "Pick an operation: ", 0x00
+    ask_oprtn_len          EQU $ - ask_oprtn
 
     output_msg             DB "Output: ", 0x00
     output_msg_len         EQU $ - output_msg
 
-    ; Error messages     
-    error_text             DB "ERROR: one digit max O_o", 0xA, 0x00
-    error_text_length      EQU $ - error_text
+; ========== SECTION 2: Error messages ========== 
+    error_too_many         DB "ERROR: one digit max O_o", 0xA, 0x00
+    error_too_many_len     EQU $ - error_too_many
 
     error_no_number        DB "ERROR: no number given -_-", 0xA, 0x00
     error_no_num_len       EQU $ - error_no_number

@@ -125,7 +125,7 @@ error_print_enter_pressed:
 
 error_print:
     CALL red_error_message_colour_on
-    print error_text, error_text_length
+    print error_too_many, error_too_many_len
     CALL red_error_message_colour_off
     JMP exit
 
