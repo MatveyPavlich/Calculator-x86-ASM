@@ -47,33 +47,65 @@ exit:
 %endmacro
 
 ;------------------------------------------
-; void input_check(Buffer input)
-; Validates a 1-digit input (0–9) or raises errors
-; (%1) - address of the input buffer (e.g., num1)
-%macro input_check 1                ; (%1) - input memory address (e.g., num1)
-    CMP eax, 1                      ; eax stores input length. See if 1 character was given (i.e., ENTER)
-    JE %%enter_pressed              ; print "No numbers given" error
+; void input_check (Buffer input)
+; (%1) - address of the input buffer (e.g., num1, num2, op)
+; (%2) - address to store sign flag (e.g., sign1, sign2)
+%macro input_check 2
+    CMP eax, 1                       ; Check the input length. eax stores it
+    JE %%enter_pressed               ; print "No numbers given" error if eax = 1
 
-    CMP BYTE [%1], '0'              ; Check if an ASCII character < 0
-    JB %%invalid_char               ; Print error message
-    CMP BYTE [%1], '9'              ; Check if an ASCII character > 9
-    JA %%invalid_char               ; Print error message
+    ; See if it is a signed number          
+    MOV dl, [%1]                     ; Move operand into dl
+    CMP dl, '+'                      ; Check if it is +
+    JE %%has_sign                    ; Do a signed check
+    CMP dl, '-'                      ; Check if it is -
+    JE %%has_sign                    ; Do a signed check
+              
+    ; No sign, fall back to regular check
+    MOV BYTE [%2], 0x00              ; Record that there is no sign on a digit
+    CMP dl, '0'                      ; Check if an ASCII character < 0
+    JB %%invalid_char                ; Print error message
+    CMP dl, '9'                      ; Check if an ASCII character > 9
+    JA %%invalid_char                ; Print error message
+    CMP BYTE [(%1) + 1], 0x0A        ; Make sure 2nd ASCII character is a newline
+    JNE %%too_long                   ; Print error message if not
+    MOV [esi], dl
+    INC esi
+    JMP %%ok                         ; Finish check if no errors detected
 
-    CMP BYTE [(%1) + 1], 0x0A       ; Make sure 2nd ASCII character is a newline
-    JNE %%too_long                  ; Print error message if not
-
-    JMP %%ok                        ; Finish check if no errors detected
+%%has_sign:
+    CMP eax, 3                       ; Check for 3 chars (sign, number, newline)
+    JB %%enter_pressed               ; Smaller if just ENTER pressed
+    JA %%too_long                    ; More numbers if >3
+    CMP BYTE [%1 + 1], '0'           ; Check if an ASCII character < 0
+    JB %%invalid_char                ; Print error message
+    CMP BYTE [%1 + 1], '9'           ; Check if an ASCII character > 9
+    JA %%invalid_char                ; Print error message
+    CMP BYTE [%1 + 2], 0x0A          ; Make sure 3rd ASCII character is a newline
+    JNE %%too_long                   ; Print error message if not
+    MOV [%2], dl                     ; Save sign on the number (e.g. to sign1)
+    MOV BYTE [esi], '('              ; Move a newline to the 2nd position
+    INC esi                          ; Move string pointer
+    MOV [esi], dl                    ; Save to the equation string
+    INC esi
+    MOV dl, [%1 + 1]                 ; Get the actual number character
+    MOV [%1], dl                     ; Save it to be at the first byte
+    MOV [esi], dl                    ; Save to the equation string
+    INC esi
+    MOV BYTE [esi], ')'              ; Save to the equation string
+    INC esi
+    JMP %%ok
 
 %%enter_pressed:
-    JMP error_print_enter_pressed   ; print "No numbers given" error
+    JMP error_print_enter_pressed
 
 %%invalid_char:
-    flush_check %1                  ; Flush kernel buffer for input to not overflow into shell
-    JMP error_ivalid_character      ; Print "Invalid character" error
+    flush_check %1                ; Flush kernel buffer for input to not overflow into shell
+    JMP error_ivalid_character    ; Print "Single digit only" error
 
 %%too_long:
-    flush_check %1                  ; Flush kernel buffer for input to not overflow into shell
-    JMP error_print                 ; Print "Single digit only" error
+    flush_check %1
+    JMP error_print
 
 %%ok:
 %endmacro
@@ -81,25 +113,29 @@ exit:
 ; ========== SECTION 5: Math Operations ==========
 
 addition:
-    MOV BYTE [equation + 1], '+'
+    MOV BYTE [esi], '+'
+    INC esi
     ADD al, bl
     CALL int_to_ascii
     JMP print_result
 
 subtract:
-    MOV BYTE [equation + 1], '-'
+    MOV BYTE [esi], '-'
+    INC esi
     SUB al, bl
     CALL int_to_ascii
     JMP print_result
 
 multiply:
-    MOV BYTE [equation + 1], '*'
+    MOV BYTE [esi], '*'
+    INC esi
     MUL bl
     CALL int_to_ascii
     JMP print_result
 
 divide:
-    MOV BYTE [equation + 1], '/'
+    MOV BYTE [esi], '/'
+    INC esi
     CMP bl, 0
     JE error_divide_by_zero
     MOV ah, 0
@@ -143,39 +179,42 @@ error_divide_by_zero:
 
 ; ========== SECTION 4: Conversion Helpers ==========
 int_to_ascii:
-    ; Convert int to ascii by separating 10^1 and 10^0
-    MOV ah, 0            ; Clean ah since will store the remainder after division
-    MOV bl, 10           ; divisor
-    DIV bl               ; do al / 10
-    ADD al, '0'
-    MOV [result], al
-    MOV al, ah
-    ADD al, '0'
-    MOV [result + 1], al
+    ; Convert int to ascii by separating 10^1 (units) and 10^0 (tens)
+    
+    MOV BYTE [esi], '='  ; Write = into the equation
+    INC esi              ; Increment string pointer to a next free spot
+
+    MOV ah, 0            ; Clean ah to store the remainder after division
+    MOV bl, 10           ; Divide
+    DIV bl               ; Do al / 10 to separate units and tens
+    CMP al, 0
+    JE .two_digit
+    MOV al, 0
+    MOV al, ah           ; Transfer the remainder (units) into al
+    ADD al, '0'          ; Convert units to ASCII
+    MOV [esi], al        ; Save tens into memory
+    INC esi
     RET
+
+.two_digit:
+    ADD al, '0'          ; Convert tens to ASCII
+    MOV [esi], al        ; Save tens into memory
+    INC esi
+    MOV al, ah           ; Transfer the remainder (units) into al
+    ADD al, '0'          ; Convert units to ASCII
+    MOV [esi], al       ; Save tens into memory
+    INC esi
+    RET
+
 
 ; --------------- Printing statements ---------------
 
 print_result:
     print output_msg, output_msg_len
-    MOV ax, 0
-
-    ; If the first byte is 0 => skip (i.e., avoid printing 2 as 02)
-    CMP BYTE [result], '0'
-    JE .print_one_digit
-
-    ; Otherwise print 2 numbers
-    MOV ax, [result]
-    MOV [equation + 4], ax
-    MOV BYTE [equation + 6], 0xA
-    print equation, 7
-    JMP exit
-
-.print_one_digit:
-    MOV al, [result + 1]
-    MOV [equation + 4], al
-    MOV BYTE [equation + 5], 0xA
-    print equation, 6
+    MOV ax, 0                          ; Clean ax
+    MOV [esi], al                      ; Finish equation string
+    SUB esi, equation                  ; Find string length
+    print equation, esi
     JMP exit
 
 flush_stdin:
