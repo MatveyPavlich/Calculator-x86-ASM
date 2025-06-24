@@ -23,13 +23,13 @@ _start:
     print ask_input_1, ask_input_1_len   ; Ask user for the first operand
     read num1, 10                        ; Read user input using a syscall
     input_check num1                     ; Check the input is valid
-    print ask_input_2, ask_input_2_len   ; Ask user for the second operand
-    read num2, 10                        ; Read user input using a syscall
-    input_check num2                     ; Check the input is valid
     print show_oprtns, show_oprtns_len   ; Display available operations
     print ask_oprtn, ask_oprtn_len       ; Ask user for the operation
     read op, 2                           ; Read user input using a syscall
     input_check op                       ; Check the input is valid
+    print ask_input_2, ask_input_2_len   ; Ask user for the second operand
+    read num2, 10                        ; Read user input using a syscall
+    input_check num2                     ; Check the input is valid
 
     ; ASCII -> INT conversion
     MOV cl, [op]                         ; Move the opperation code into cl
