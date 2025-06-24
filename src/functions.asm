@@ -47,33 +47,53 @@ exit:
 %endmacro
 
 ;------------------------------------------
-; void input_check(Buffer input)
-; Validates a 1-digit input (0–9) or raises errors
+; void input_check (Buffer input)
 ; (%1) - address of the input buffer (e.g., num1)
-%macro input_check 1                ; (%1) - input memory address (e.g., num1)
-    CMP eax, 1                      ; eax stores input length. See if 1 character was given (i.e., ENTER)
-    JE %%enter_pressed              ; print "No numbers given" error
+%macro input_check 1
+    CMP eax, 1                       ; Check the input length. eax stores it
+    JE %%enter_pressed               ; print "No numbers given" error if eax = 1
 
-    CMP BYTE [%1], '0'              ; Check if an ASCII character < 0
-    JB %%invalid_char               ; Print error message
-    CMP BYTE [%1], '9'              ; Check if an ASCII character > 9
-    JA %%invalid_char               ; Print error message
+    ; See if it is a signed number          
+    MOV dl, [%1]                     ; Move operand into dl
+    CMP dl, '+'                      ; Check if it is +
+    JE %%has_sign                    ; Do a signed check
+    CMP dl, '-'                      ; Check if it is -
+    JE %%has_sign                    ; Do a signed check
+              
+    ; No sign, fall back to regular check
+    CMP dl, '0'                      ; Check if an ASCII character < 0
+    JB %%invalid_char                ; Print error message
+    CMP dl, '9'                      ; Check if an ASCII character > 9
+    JA %%invalid_char                ; Print error message
+    CMP BYTE [(%1) + 1], 0x0A        ; Make sure 2nd ASCII character is a newline
+    JNE %%too_long                   ; Print error message if not
+    JMP %%ok                         ; Finish check if no errors detected
 
-    CMP BYTE [(%1) + 1], 0x0A       ; Make sure 2nd ASCII character is a newline
-    JNE %%too_long                  ; Print error message if not
-
-    JMP %%ok                        ; Finish check if no errors detected
+%%has_sign:
+    CMP eax, 3                       ; Check for 3 chars (sign, number, newline)
+    JB %%enter_pressed               ; Smaller if just ENTER pressed
+    JA %%too_long                    ; More numbers if >3
+    CMP BYTE [%1 + 1], '0'           ; Check if an ASCII character < 0
+    JB %%invalid_char                ; Print error message
+    CMP BYTE [%1 + 1], '9'           ; Check if an ASCII character > 9
+    JA %%invalid_char                ; Print error message
+    CMP BYTE [%1 + 2], 0x0A          ; Make sure 3rd ASCII character is a newline
+    JNE %%too_long                   ; Print error message if not
+    MOV dl, [%1 + 1]                 ; Get the actual number character
+    MOV [%1], dl                     ; Save it to be at the first byte
+    MOV BYTE [%1 + 1], 0x0A          ; Move a newline to the 2nd position
+    JMP %%ok
 
 %%enter_pressed:
-    JMP error_print_enter_pressed   ; print "No numbers given" error
+    JMP error_print_enter_pressed
 
 %%invalid_char:
-    flush_check %1                  ; Flush kernel buffer for input to not overflow into shell
-    JMP error_ivalid_character      ; Print "Invalid character" error
+    flush_check %1                ; Flush kernel buffer for input to not overflow into shell
+    JMP error_ivalid_character    ; Print "Single digit only" error
 
 %%too_long:
-    flush_check %1                  ; Flush kernel buffer for input to not overflow into shell
-    JMP error_print                 ; Print "Single digit only" error
+    flush_check %1
+    JMP error_print
 
 %%ok:
 %endmacro
