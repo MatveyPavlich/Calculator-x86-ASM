@@ -62,7 +62,8 @@ exit:
     JE %%has_sign                    ; Do a signed check
               
     ; No sign, fall back to regular check
-    MOV BYTE [%2], 0x00              ; Record that there is no sign on a digit
+    ; MOV BYTE [%2], 0x00              ; Record that there is no sign on a digit
+    ; Somehow this line overwrites op with 0x00 (check with gdb)
     CMP dl, '0'                      ; Check if an ASCII character < 0
     JB %%invalid_char                ; Print error message
     CMP dl, '9'                      ; Check if an ASCII character > 9
