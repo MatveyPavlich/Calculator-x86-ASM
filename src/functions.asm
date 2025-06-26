@@ -159,7 +159,7 @@ exit:
 
 %%invalid_char:
     flush_check %1                ; Flush kernel buffer for input to not overflow into shell
-    JMP error_ivalid_character    ; Print "Single digit only" error
+    JMP error_invalid_opperation   ; Print "Single digit only" error
 
 %%too_long:
     flush_check %1
@@ -226,6 +226,12 @@ error_ivalid_character:
 error_divide_by_zero:
     CALL red_error_message_colour_on
     print error_div_zero, error_div_zero_len
+    CALL red_error_message_colour_off
+    JMP exit
+
+error_invalid_opperation:
+    CALL red_error_message_colour_on
+    print error_invalid_op, error_invalid_op_len
     CALL red_error_message_colour_off
     JMP exit
 
