@@ -124,6 +124,11 @@ exit:
     JNE %%too_long
     
     MOV dl, [%1]
+    CMP dl, '1'            ; Check if an ASCII character < 0
+    JB %%invalid_operation ; Print error message
+    CMP dl, '4'            ; Check if an ASCII character > 9
+    JA %%invalid_operation
+
     CMP dl, 1
     JE %%plus
     CMP dl, 2
@@ -132,7 +137,6 @@ exit:
     JE %%multiply
     CMP dl, 4
     JE %%divide
-    JMP %%invalid_char
 
 %%plus:
     XOR dl, dl
@@ -157,7 +161,7 @@ exit:
 %%enter_pressed:
     JMP error_print_enter_pressed
 
-%%invalid_char:
+%%invalid_operation:
     flush_check %1                ; Flush kernel buffer for input to not overflow into shell
     JMP error_invalid_opperation   ; Print "Single digit only" error
 
