@@ -30,7 +30,7 @@ _start:
     print show_oprtns, show_oprtns_len   ; Display available operations
     print ask_oprtn, ask_oprtn_len       ; Ask user for the operation
     read op, 2                           ; Read user input using a syscall
-    input_check op, (op + 1)             ; Check the input is valid (don't need a sign here)
+    operation_check op                  ; Check the input is valid (don't need a sign here)
     print ask_input_2, ask_input_2_len   ; Ask user for the second operand
     read num2, 10                        ; Read user input using a syscall
     input_check num2, sign1              ; Check the input is valid

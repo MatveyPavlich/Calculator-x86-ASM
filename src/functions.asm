@@ -111,32 +111,83 @@ exit:
 %%ok:
 %endmacro
 
+
+;------------------------------------------
+; void input_check (Buffer input)
+; (%1) - address of the input buffer (e.g., num1, num2, op)
+; (%2) - address to store sign flag (e.g., sign1, sign2)
+%macro operation_check 1
+    CMP eax, 1                       ; Check the input length. eax stores it
+    JE %%enter_pressed               ; print "No numbers given" error if eax = 1
+
+    CMP BYTE [(%1) + 1], 0x0A        ; Make sure 2nd ASCII character is a newline
+    JNE %%too_long
+    
+    MOV dl, [%1]
+    CMP dl, 1
+    JE %%plus
+    CMP dl, 2
+    JE %%minus
+    CMP dl, 3
+    JE %%multiply
+    CMP dl, 4
+    JE %%divide
+    JMP %%invalid_char
+
+%%plus:
+    XOR dl, dl
+    MOV dl, '+'
+    JMP %%ok
+
+%%minus:
+    XOR dl, dl
+    MOV dl, '-'
+    JMP %%ok
+
+%%multiply:
+    XOR dl, dl
+    MOV dl, '*'
+    JMP %%ok
+
+%%divide:
+    XOR dl, dl
+    MOV dl, '/'
+    JMP %%ok
+
+%%enter_pressed:
+    JMP error_print_enter_pressed
+
+%%invalid_char:
+    flush_check %1                ; Flush kernel buffer for input to not overflow into shell
+    JMP error_ivalid_character    ; Print "Single digit only" error
+
+%%too_long:
+    flush_check %1
+    JMP error_print
+
+%%ok:
+    MOV [esi], dl
+    INC esi
+%endmacro
+
 ; ========== SECTION 5: Math Operations ==========
 
 addition:
-    MOV BYTE [esi], '+'
-    INC esi
     ADD al, bl
     CALL int_to_ascii
     JMP print_result
 
 subtract:
-    MOV BYTE [esi], '-'
-    INC esi
     SUB al, bl
     CALL int_to_ascii
     JMP print_result
 
 multiply:
-    MOV BYTE [esi], '*'
-    INC esi
     MUL bl
     CALL int_to_ascii
     JMP print_result
 
 divide:
-    MOV BYTE [esi], '/'
-    INC esi
     CMP bl, 0
     JE error_divide_by_zero
     MOV ah, 0
