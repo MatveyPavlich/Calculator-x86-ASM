@@ -36,6 +36,9 @@ section .data
     error_invalid_char     DB "ERROR: invalid character", 0xA, 0x00
     error_invalid_char_len EQU $ - error_invalid_char
 
+    error_invalid_op       DB "ERROR: invalid opperation, use 1,2,3 or 4 :/", 0xA, 0x00
+    error_invalid_op_len   EQU $ - error_invalid_op
+
     red_start              DB 0x1B, "[31m", 0 
     red_start_len          EQU $ - red_start
 
