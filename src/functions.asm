@@ -84,11 +84,13 @@ exit:
     JA %%invalid_char                ; Print error message
     CMP BYTE [%1 + 2], 0x0A          ; Make sure 3rd ASCII character is a newline
     JNE %%too_long                   ; Print error message if not
+    
     MOV [%2], dl                     ; Save sign on the number (e.g. to sign1)
     MOV BYTE [esi], '('              ; Move a newline to the 2nd position
     INC esi                          ; Move string pointer
-    MOV [esi], dl                    ; Save to the equation string
+    MOV [esi], dl                    ; Store number sign in the equation 
     INC esi
+    XOR dl, dl                       ; Clean dl from the sign
     MOV dl, [%1 + 1]                 ; Get the actual number character
     MOV [%1], dl                     ; Save it to be at the first byte
     MOV [esi], dl                    ; Save to the equation string
@@ -129,14 +131,16 @@ exit:
     CMP dl, '4'            ; Check if an ASCII character > 9
     JA %%invalid_operation
 
-    CMP dl, 1
+    CMP dl, '1'
     JE %%plus
-    CMP dl, 2
+    CMP dl, '2'
     JE %%minus
-    CMP dl, 3
+    CMP dl, '3'
     JE %%multiply
-    CMP dl, 4
+    CMP dl, '4'
     JE %%divide
+    ;; Goes to %%plus for some reason. Crazy, you actually just fall through! Reason? %%plus is the next instruction physically in the memory
+    ; Add %%invalid operation JMP
 
 %%plus:
     XOR dl, dl
@@ -250,8 +254,7 @@ int_to_ascii:
     MOV bl, 10           ; Divide
     DIV bl               ; Do al / 10 to separate units and tens
     CMP al, 0
-    JE .two_digit
-    MOV al, 0
+    JNE .two_digit
     MOV al, ah           ; Transfer the remainder (units) into al
     ADD al, '0'          ; Convert units to ASCII
     MOV [esi], al        ; Save tens into memory
@@ -262,9 +265,10 @@ int_to_ascii:
     ADD al, '0'          ; Convert tens to ASCII
     MOV [esi], al        ; Save tens into memory
     INC esi
+    XOR al, al           ; Clean al register
     MOV al, ah           ; Transfer the remainder (units) into al
     ADD al, '0'          ; Convert units to ASCII
-    MOV [esi], al       ; Save tens into memory
+    MOV [esi], al        ; Save tens into memory
     INC esi
     RET
 
@@ -273,10 +277,12 @@ int_to_ascii:
 
 print_result:
     print output_msg, output_msg_len
+    MOV BYTE [esi], 0xA                ; Add a newline character
+    INC esi
     MOV ax, 0                          ; Clean ax
     MOV [esi], al                      ; Finish equation string
     SUB esi, equation                  ; Find string length
-    print equation, esi
+    print equation, esi                ; Print equation starting from 'equation' memo address
     JMP exit
 
 flush_stdin:

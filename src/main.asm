@@ -39,12 +39,9 @@ _start:
     MOV cl, [op]                         ; Move the opperation code into cl
     SUB cl, '0'                          ; Covert ascii to int
     MOV al, [num1]                       ; Move num1 into al
-    MOV [equation], al                   ; Write al into memory to print enquation later
     SUB al, '0'                          ; Covert ascii to int
     MOV bl, [num2]                       ; Move num2 into bl
-    MOV [equation + 2], bl               ; Write bl into memory to print enquation later
     SUB bl, '0'                          ; Covert ascii to int
-    MOV BYTE [equation + 3], '='         ; Write = into memory to print equation later
 
     ; Identify opereration
     CMP cl, 1
