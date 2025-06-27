@@ -88,7 +88,9 @@ exit:
     MOV [%2], dl                     ; Save sign on the number (e.g. to sign1)
     MOV BYTE [esi], '('              ; Move a newline to the 2nd position
     INC esi                          ; Move string pointer
-    XOR dl, dl
+    MOV [esi], dl                    ; Store number sign in the equation 
+    INC esi
+    XOR dl, dl                       ; Clean dl from the sign
     MOV dl, [%1 + 1]                 ; Get the actual number character
     MOV [%1], dl                     ; Save it to be at the first byte
     MOV [esi], dl                    ; Save to the equation string
@@ -129,14 +131,16 @@ exit:
     CMP dl, '4'            ; Check if an ASCII character > 9
     JA %%invalid_operation
 
-    CMP dl, 1
+    CMP dl, '1'
     JE %%plus
-    CMP dl, 2
+    CMP dl, '2'
     JE %%minus
-    CMP dl, 3
+    CMP dl, '3'
     JE %%multiply
-    CMP dl, 4
+    CMP dl, '4'
     JE %%divide
+    ;; Goes to %%plus for some reason. Crazy, you actually just fall through! Reason? %%plus is the next instruction physically in the memory
+    ; Add %%invalid operation JMP
 
 %%plus:
     XOR dl, dl
