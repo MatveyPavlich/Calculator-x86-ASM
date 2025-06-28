@@ -1,10 +1,9 @@
-# Calculator in x86 assembly v1.1
+# Calculator in x86 assembly v1.4
 ## Introduction
 - This is a simple calculator that is written in x86 assembly! My first mini-project to practice assembly.
-- Developed 2025-06-08 - 2025-06-13
-- It can only handle single digit imput and output
-    - e.g., 4+5 will work
-    - e.g., 5+6 will not work since the output is 2 digits
+- Development: 2025-06-08 - 2025-Present
+- Version developed: 2025-06-16 - 2025-06-28
+- Can handle 1 digit signed numbers (except for division, for which it should be unsigned)
 
 ## Packages
 To run the app, make sure you have the following packages installed:

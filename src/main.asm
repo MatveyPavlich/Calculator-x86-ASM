@@ -1,11 +1,11 @@
-; Calculator - v1.4 (2025-06-16)
-; Supports 1-digit numbers only
+; Calculator - v1.4 (Developed 2025-06-16 - 2025-06-28)
+; Supports 1-digit signed numbers (no 2 digit numbers + unsigned for division)
 ; Improvements:
 ; - 2 digit result is avaliable (e.g. 8*8 does not return giberish)
 ; - Full equation is printed in the output
 ; - Code made more modular by creating data.asm and functions.asm
 ; - Support for +1/-1 inputs
-; - Support for negative digits (WIP)
+; - Support for negative digits (except division)
 
 
 

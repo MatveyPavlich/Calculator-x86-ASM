@@ -226,7 +226,6 @@ sign_adjustment:
     RET
 
 int_to_ascii:
-    ; TODO; detect if a negative result => print - + NEG the number + print
     ; Convert int to ascii by separating 10^1 (units) and 10^0 (tens)
     
     MOV BYTE [esi], '='  ; Write = into the equation

@@ -1,17 +1,34 @@
-Features to add:
-- Implement support for floating point arithmetics
-- When there is a bad imput program restarts and user is prompted to add a number another time (rather than exiting a program) ⭐️⭐️⭐️
+Other features to add:
+- When there is a bad imput program restarts and user is prompted to add a number another time (rather than exiting a program)
 - Allow user to select stuff with arrows
-- Create unit tests ⭐️
+- Create unit tests
 
-v1.4
-- Display correctly 2 digit result for multiplication ✅
-    e.g., currently 7*8 gives giberrish
-- Print the whole equation in a terminal (To get used to printing stuff for Data Structures projects) ✅
-- Implement support for sign numbers (WIP)
+v2 (Plan)
+- Implement support for floating point arithmetics
+
+v1.5 (Plan)
+- Support signed division
+- Support 2 digit inputs
+- Code cleanup
+
+v1.4 (Developed 2025-06-16 - 2025-06-28)
+- Supports 1-digit signed numbers (except for division)
+    - Support for +1/-1 inputs without throwing an ERROR
+    - Print brackets around singed input numbers
+    - Implement signed support for ADD, SUB and MUL
+- Improvements:
+    - 2 digit result is printed properly (e.g. 8*8 does not return giberish). Before you were limited to your output being no more than 9
+    - Full equation is printed in the output (to make it easier to wrap signed inputs in brackets)
+    - Code made more modular by creating data.asm and functions.asm
 
 v1.3
 Improvements:
 - Code comments added
 - Macro for input check
 - Add flush check logic to remove bug that previously required to press ENTER two times before seeing an ERROR message about input being too long
+
+v1.1 (Developed 2025-06-08 - 2025-06-13)
+- 4 operations
+- It can only handle single digit imput and output
+    - e.g., 4+5 will work
+    - e.g., 5+6 will not work since the output is 2 digits
