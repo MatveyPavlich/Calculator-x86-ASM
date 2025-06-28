@@ -61,58 +61,57 @@ exit:
     CMP dl, '-'                      ; Check if it is -
     JE %%has_sign                    ; Do a signed check
               
-    ; No sign, fall back to regular check
-    ; MOV BYTE [%2], 0x00              ; Record that there is no sign on a digit
-    ; Somehow this line overwrites op with 0x00 (check with gdb)
+    ; No sign, fall through to regular check
     CMP dl, '0'                      ; Check if an ASCII character < 0
     JB %%invalid_char                ; Print error message
     CMP dl, '9'                      ; Check if an ASCII character > 9
     JA %%invalid_char                ; Print error message
     CMP BYTE [(%1) + 1], 0x0A        ; Make sure 2nd ASCII character is a newline
     JNE %%too_long                   ; Print error message if not
-    MOV [esi], dl
-    INC esi
+    
+    MOV [esi], dl                    ; Write validated input into the equation
+    INC esi                          ; Increment equation string pointer
     MOV BYTE [esi], ' '              ; Add a space after the character
-    INC esi
+    INC esi                          ; Increment equation string pointer
     JMP %%ok                         ; Finish check if no errors detected
 
 %%has_sign:
     CMP eax, 3                       ; Check for 3 chars (sign, number, newline)
-    JB %%enter_pressed               ; Smaller if just ENTER pressed
-    JA %%too_long                    ; More numbers if >3
+    JB %%enter_pressed               ; Smaller if just ENTER pressed (i.e., sign, 0xA)
+    JA %%too_long                    ; >1 digit number if >3
     CMP BYTE [%1 + 1], '0'           ; Check if an ASCII character < 0
-    JB %%invalid_char                ; Print error message
+    JB %%invalid_char                ; Print invalid character error message
     CMP BYTE [%1 + 1], '9'           ; Check if an ASCII character > 9
-    JA %%invalid_char                ; Print error message
+    JA %%invalid_char                ; Print invalid character error message
     CMP BYTE [%1 + 2], 0x0A          ; Make sure 3rd ASCII character is a newline
     JNE %%too_long                   ; Print error message if not
     
     MOV [%2], dl                     ; Save sign on the number (e.g. to sign1)
-    MOV BYTE [esi], '('              ; Move a newline to the 2nd position
-    INC esi                          ; Move string pointer
+    MOV BYTE [esi], '('              ; Start wrapping sign into brackets in the equation
+    INC esi                          ; Increment equation string pointer
     MOV [esi], dl                    ; Store number sign in the equation 
-    INC esi
+    INC esi                          ; Increment equation string pointer
     XOR dl, dl                       ; Clean dl from the sign
     MOV dl, [%1 + 1]                 ; Get the actual number character
     MOV [%1], dl                     ; Save it to be at the first byte
     MOV [esi], dl                    ; Save to the equation string
-    INC esi
+    INC esi                          ; Increment equation string pointer
     MOV BYTE [esi], ')'              ; Save to the equation string
-    INC esi
+    INC esi                          ; Increment equation string pointer
     MOV BYTE [esi], ' '              ; Add a space after the character
-    INC esi
+    INC esi                          ; Increment equation string pointer
     JMP %%ok
 
 %%enter_pressed:
     JMP error_print_enter_pressed
 
 %%invalid_char:
-    flush_check %1                ; Flush kernel buffer for input to not overflow into shell
-    JMP error_ivalid_character    ; Print "Single digit only" error
+    flush_check %1                   ; Flush kernel buffer for input to not overflow into shell
+    JMP error_ivalid_character       ; Print "Single digit only" error
 
 %%too_long:
-    flush_check %1
-    JMP error_print
+    flush_check %1                   ; Flush kernel buffer for input to not overflow into shell
+    JMP error_print                  ; Print "One digit allowed" error
 
 %%ok:
 %endmacro
@@ -129,11 +128,11 @@ exit:
     CMP BYTE [(%1) + 1], 0x0A        ; Make sure 2nd ASCII character is a newline
     JNE %%too_long
     
-    MOV dl, [%1]
-    CMP dl, '1'            ; Check if an ASCII character < 0
-    JB %%invalid_operation ; Print error message
-    CMP dl, '4'            ; Check if an ASCII character > 9
-    JA %%invalid_operation
+    MOV dl, [%1]                     ; Move operation from op to dl
+    CMP dl, '1'                      ; Check if an ASCII character < 0
+    JB %%invalid_operation           ; Print error message if below 0
+    CMP dl, '4'                      ; Check if an ASCII character > 9
+    JA %%invalid_operation           ; Print error message if above 0
 
     CMP dl, '1'
     JE %%plus
@@ -143,8 +142,8 @@ exit:
     JE %%multiply
     CMP dl, '4'
     JE %%divide
-    ;; Goes to %%plus for some reason. Crazy, you actually just fall through! Reason? %%plus is the next instruction physically in the memory
-    ; Add %%invalid operation JMP
+    JMP %%invalid_operation          ; Nothing should reach this, but just in case
+                                     ; to prevent falling through to %%plus
 
 %%plus:
     XOR dl, dl
@@ -170,18 +169,18 @@ exit:
     JMP error_print_enter_pressed
 
 %%invalid_operation:
-    flush_check %1                ; Flush kernel buffer for input to not overflow into shell
-    JMP error_invalid_opperation   ; Print "Single digit only" error
+    flush_check %1                   ; Flush kernel buffer for input to not overflow into shell
+    JMP error_invalid_opperation     ; Print "Single digit only" error
 
 %%too_long:
     flush_check %1
     JMP error_print
 
 %%ok:
-    MOV [esi], dl
-    INC esi
+    MOV [esi], dl                    ; Move operation ASCII symbol into equation
+    INC esi                          ; Increment equation string pointer
     MOV BYTE [esi], ' '              ; Add a space after the character
-    INC esi
+    INC esi                          ; Increment equation string pointer
 %endmacro
 
 ; ========== SECTION 5: Math Operations ==========
