@@ -267,7 +267,6 @@ int_to_ascii:
     MOV [esi], al        ; Save tens into memory
     INC esi
     RET
-
 .two_digit:
     ADD al, '0'          ; Convert tens to ASCII
     MOV [esi], al        ; Save tens into memory
@@ -279,6 +278,17 @@ int_to_ascii:
     INC esi
     RET
 
+sign_adjustment:
+    CMP BYTE [sign1], '-'            ; See if first operand is negative
+    JNE .check_sign2                 ; Go to 2nd operand if sign1 != '-'
+    NEG al                           ; Negate num1 if sign1 = '-'. Then, move to sign2
+    JMP .check_sign2                 ; Check the sign of the 2nd operand
+.check_sign2:
+    CMP BYTE [sign2], '-'            ; See if second operand is negative
+    JNE .done                        ; If sign2 not negative, we're done
+    NEG bl                           ; If sign2 is negative, negate num2
+.done:
+    RET
 
 ; --------------- Printing statements ---------------
 

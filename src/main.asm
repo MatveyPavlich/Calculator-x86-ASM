@@ -45,12 +45,13 @@ _start:
     input_check     num2,        sign1             ; Check the input is valid
 
     ; ASCII -> INT conversion
-    MOV cl, [op]                                   ; Move the opperation code into cl
-    SUB cl, '0'                                    ; Covert ascii to int
     MOV al, [num1]                                 ; Move num1 into al
     SUB al, '0'                                    ; Covert ascii to int
     MOV bl, [num2]                                 ; Move num2 into bl
     SUB bl, '0'                                    ; Covert ascii to int
+    MOV cl, [op]                                   ; Move the opperation code into cl
+    SUB cl, '0'                                    ; Covert ascii to int
+    CALL sign_adjustment                           ; Make signed numbers negative in registers 
 
     ; Identify opereration
     CMP cl, 1
