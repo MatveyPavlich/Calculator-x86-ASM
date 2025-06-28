@@ -196,7 +196,7 @@ subtract:
     JMP print_result
 
 multiply:
-    MUL bl
+    IMUL bl                      ; Multiplication is on signed nummbers [-128, +127]
     CALL int_to_ascii
     JMP print_result
 
