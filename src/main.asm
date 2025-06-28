@@ -4,23 +4,32 @@
 ; - 2 digit result is avaliable (e.g. 8*8 does not return giberish)
 ; - Full equation is printed in the output
 ; - Code made more modular by creating data.asm and functions.asm
+; - Support for +1/-1 inputs
+; - Support for negative digits (WIP)
 
-%define num1         memory_buffer
-%define num2         memory_buffer + 3
-%define op           memory_buffer + 6
-%define result       memory_buffer + 9
-%define equation     memory_buffer + 50
-%define sign1        memory_buffer + 20
-%define sign2        memory_buffer + 21
-    
+
+
+; ========== SECTION 1: Storage locations ==========
+%define num1         memory_buffer                 ; Location to store first operand
+%define sign1        memory_buffer + 4             ; Location to store the sign on the first operand
+%define op           memory_buffer + 5             ; Location to store operation
+%define num2         memory_buffer + 7             ; Location to store second operand
+%define sign2        memory_buffer + 10            ; Location to store the sign on the first operand
+%define equation     memory_buffer + 11            ; Location to write the full equation
+
+
+
+; ========== SECTION 2: Get data and functions code ==========
 %include "./src/data.asm"
 %include "./src/functions.asm"
 
+
+; ========== SECTION 3: Main code ==========
 section .text
 global _start
 
 _start:
-    MOV esi, equation                    ; Store pointer to the equation
+    MOV esi, equation                              ; Store pointer to the equation
     
     ; Get all values
     print           welcome_msg, welcome_msg_len   ; Print welcome message
