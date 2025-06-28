@@ -72,6 +72,8 @@ exit:
     JNE %%too_long                   ; Print error message if not
     MOV [esi], dl
     INC esi
+    MOV BYTE [esi], ' '              ; Add a space after the character
+    INC esi
     JMP %%ok                         ; Finish check if no errors detected
 
 %%has_sign:
@@ -96,6 +98,8 @@ exit:
     MOV [esi], dl                    ; Save to the equation string
     INC esi
     MOV BYTE [esi], ')'              ; Save to the equation string
+    INC esi
+    MOV BYTE [esi], ' '              ; Add a space after the character
     INC esi
     JMP %%ok
 
@@ -176,6 +180,8 @@ exit:
 %%ok:
     MOV [esi], dl
     INC esi
+    MOV BYTE [esi], ' '              ; Add a space after the character
+    INC esi
 %endmacro
 
 ; ========== SECTION 5: Math Operations ==========
@@ -249,6 +255,8 @@ int_to_ascii:
     
     MOV BYTE [esi], '='  ; Write = into the equation
     INC esi              ; Increment string pointer to a next free spot
+    MOV BYTE [esi], ' '              ; Add a space after the character
+    INC esi
 
     MOV ah, 0            ; Clean ah to store the remainder after division
     MOV bl, 10           ; Divide
