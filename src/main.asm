@@ -42,7 +42,7 @@ _start:
     operation_check op                             ; Check the input is valid (don't need a sign here)
     print           ask_input_2, ask_input_2_len   ; Ask user for the second operand
     read            num2,        10                ; Read user input using a syscall
-    input_check     num2,        sign1             ; Check the input is valid
+    input_check     num2,        sign2             ; Check the input is valid
 
     ; ASCII -> INT conversion
     MOV al, [num1]                                 ; Move num1 into al

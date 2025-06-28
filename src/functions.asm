@@ -201,12 +201,92 @@ multiply:
     JMP print_result
 
 divide:
-    CMP bl, 0
-    JE error_divide_by_zero
-    MOV ah, 0
-    DIV bl
+    CMP bl, 0                    ; See if second operand is 0
+    JE error_divide_by_zero      ; Throw an error on division by zero
+    MOV ah, 0                    ; Clear ah that will be used to store the remainder
+    DIV bl                       ; Divide al by bl
     CALL int_to_ascii
     JMP print_result
+
+; Negative vs non negative output
+; Print 0 vs not print 0
+
+
+; ========== SECTION 4: Conversion Helpers ==========
+sign_adjustment:
+    CMP BYTE [sign1], '-'            ; See if first operand is negative
+    JNE .check_sign2                 ; Go to 2nd operand if sign1 != '-'
+    NEG al                           ; Negate num1 if sign1 = '-'. Then, move to sign2
+    JMP .check_sign2                 ; Check the sign of the 2nd operand
+.check_sign2:
+    CMP BYTE [sign2], '-'            ; See if second operand is negative
+    JNE .done                        ; If sign2 not negative, we're done
+    NEG bl                           ; If sign2 is negative, negate num2
+.done:
+    RET
+
+int_to_ascii:
+    ; TODO; detect if a negative result => print - + NEG the number + print
+    ; Convert int to ascii by separating 10^1 (units) and 10^0 (tens)
+    
+    MOV BYTE [esi], '='  ; Write = into the equation
+    INC esi              ; Increment string pointer to a next free spot
+    MOV BYTE [esi], ' '              ; Add a space after the character
+    INC esi
+
+    CALL neg_output_check; Add minus if result is -ve
+    MOV ah, 0            ; Clean ah to store the remainder after division
+    MOV bl, 10           ; Divide
+    DIV bl               ; Do al / 10 to separate units and tens
+    CMP al, 0
+    JNE .two_digit
+    MOV al, ah           ; Transfer the remainder (units) into al
+    ADD al, '0'          ; Convert units to ASCII
+    MOV [esi], al        ; Save tens into memory
+    INC esi
+    RET
+.two_digit:
+    ADD al, '0'          ; Convert tens to ASCII
+    MOV [esi], al        ; Save tens into memory
+    INC esi
+    XOR al, al           ; Clean al register
+    MOV al, ah           ; Transfer the remainder (units) into al
+    ADD al, '0'          ; Convert units to ASCII
+    MOV [esi], al        ; Save tens into memory
+    INC esi
+    RET
+
+neg_output_check:
+    CMP al, 0            ; See if output is >= 0
+    JGE .done            ; Nothing to do if output is >= 0
+    MOV BYTE [esi], '-'  ; Print '-' if output < 0
+    INC esi              ; Increment equation string pointer 
+    NEG al               ; Negate the result
+    JMP .done            ; Finish
+.done:
+    RET
+
+; --------------- Printing statements ---------------
+
+print_result:
+    print output_msg, output_msg_len
+    MOV BYTE [esi], 0xA                ; Add a newline character
+    INC esi
+    MOV ax, 0                          ; Clean ax
+    MOV [esi], al                      ; Finish equation string
+    SUB esi, equation                  ; Find string length
+    print equation, esi                ; Print equation starting from 'equation' memo address
+    JMP exit
+
+flush_stdin:
+.flush_loop:
+    read memory_buffer, 1
+    CMP eax, 0
+    JE .flush_end
+    CMP BYTE [memory_buffer], 0x0A
+    JNE .flush_loop
+.flush_end:
+    RET
 
 
 ; ========== SECTION 3: Output Utilities ==========
@@ -247,67 +327,3 @@ error_invalid_opperation:
     print error_invalid_op, error_invalid_op_len
     CALL red_error_message_colour_off
     JMP exit
-
-; ========== SECTION 4: Conversion Helpers ==========
-int_to_ascii:
-    ; Convert int to ascii by separating 10^1 (units) and 10^0 (tens)
-    
-    MOV BYTE [esi], '='  ; Write = into the equation
-    INC esi              ; Increment string pointer to a next free spot
-    MOV BYTE [esi], ' '              ; Add a space after the character
-    INC esi
-
-    MOV ah, 0            ; Clean ah to store the remainder after division
-    MOV bl, 10           ; Divide
-    DIV bl               ; Do al / 10 to separate units and tens
-    CMP al, 0
-    JNE .two_digit
-    MOV al, ah           ; Transfer the remainder (units) into al
-    ADD al, '0'          ; Convert units to ASCII
-    MOV [esi], al        ; Save tens into memory
-    INC esi
-    RET
-.two_digit:
-    ADD al, '0'          ; Convert tens to ASCII
-    MOV [esi], al        ; Save tens into memory
-    INC esi
-    XOR al, al           ; Clean al register
-    MOV al, ah           ; Transfer the remainder (units) into al
-    ADD al, '0'          ; Convert units to ASCII
-    MOV [esi], al        ; Save tens into memory
-    INC esi
-    RET
-
-sign_adjustment:
-    CMP BYTE [sign1], '-'            ; See if first operand is negative
-    JNE .check_sign2                 ; Go to 2nd operand if sign1 != '-'
-    NEG al                           ; Negate num1 if sign1 = '-'. Then, move to sign2
-    JMP .check_sign2                 ; Check the sign of the 2nd operand
-.check_sign2:
-    CMP BYTE [sign2], '-'            ; See if second operand is negative
-    JNE .done                        ; If sign2 not negative, we're done
-    NEG bl                           ; If sign2 is negative, negate num2
-.done:
-    RET
-
-; --------------- Printing statements ---------------
-
-print_result:
-    print output_msg, output_msg_len
-    MOV BYTE [esi], 0xA                ; Add a newline character
-    INC esi
-    MOV ax, 0                          ; Clean ax
-    MOV [esi], al                      ; Finish equation string
-    SUB esi, equation                  ; Find string length
-    print equation, esi                ; Print equation starting from 'equation' memo address
-    JMP exit
-
-flush_stdin:
-.flush_loop:
-    read memory_buffer, 1
-    CMP eax, 0
-    JE .flush_end
-    CMP BYTE [memory_buffer], 0x0A
-    JNE .flush_loop
-.flush_end:
-    RET
