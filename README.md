@@ -1,7 +1,10 @@
-# Calculator in x86 assembly v1.4
+# Calculator in x86 assembly (v1.4)
+## Summary
+Error-tolerant, memory-safe, single-digit signed calculator in x86 Assembly (NASM). System-call based I/O, manual memory management, custom macros for input validation, and full runtime error checking. Project served as a crash-course in low-level programming, debugging with GDB, and transitioning from relying on tutorials/GPT to generate all the code to writing good quality (ish) assembly from scratch.
+
 ## Introduction
 - This is a simple calculator that is written in x86 assembly! My first mini-project to practice assembly.
-- Development: 2025-06-08 - 2025-Present
+- Development: 2025-06-08 - 2025-06-29 (Currently paused)
 - Version developed: 2025-06-16 - 2025-06-28
 - Can handle 1 digit signed numbers (except for division, for which it should be unsigned)
 
